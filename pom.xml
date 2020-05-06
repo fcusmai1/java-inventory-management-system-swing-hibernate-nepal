@@ -12,6 +12,10 @@
     <properties>
         <project.build.mainClass>com.ca.ui.Main</project.build.mainClass>
         <java.version>11</java.version>
+        <sonar.projectKey>fcusmai1_java-inventory-management-system-swing-hibernate-nepal</sonar.projectKey>
+        <sonar.organization>fcusmai1-github</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.login>a8512ae83d8b757678ca7db7aedc94c31c32b979</sonar.login>
     </properties>
 
     <dependencies>
