@@ -14,7 +14,6 @@ import com.gt.uilib.components.input.DataComboBox;
 import com.gt.uilib.components.table.BetterJTable;
 import com.gt.uilib.components.table.BetterJTableNoSorting;
 import com.gt.uilib.components.table.EasyTableModel;
-import com.gt.uilib.inputverifier.Validator;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -26,25 +25,23 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.io.Serializable;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class ItemTransferPanel extends AbstractFunctionPanel {
-    private final int qtyCol = 6;
-    private final String[] header = new String[]{"", "ID", "Pana Number", "Name", "Category", "Specification", "Parts Number", "Serial Number", "Rack Number",
+public class ItemTransferPanel extends AbstractFunctionPanel implements Serializable {
+    private static final long serialVersionUID = -5535283266424039057L;
+    private static final int QUANTITY_COL = 6;
+    public static final String CATEGORY = "Category";
+    System.Logger logger;
+
+    private final String[] header = new String[]{"", "ID", "Pana Number", "Name", CATEGORY, "Specification", "Parts Number", "Serial Number", "Rack Number",
             "Purchase date", "Added date", "Vendor", "Quantity", "Unit", "Rate"};
-    private final String[] cartHeader = new String[]{"", "ID", "Name", "Category", "Specification", "Rack Number", "Quantity", "Unit"};
-    /**
-     * ID at sec col, Qty at 7th
-     */
-    private final int idCol = 1;
+    private final String[] cartHeader = new String[]{"", "ID", "Name", CATEGORY, "Specification", "Rack Number", "Quantity", "Unit"};
     private JPanel formPanel = null;
-    private Validator v;
-    Validator vCart;
     private SpecificationPanel currentSpecificationPanel;
-    private final List cellEditors = new ArrayList();
+    transient List<Object> cellEditors;
     private JButton btnSave;
     private JPanel upperPane;
     private JPanel lowerPane;
@@ -55,26 +52,16 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
     private DataComboBox cmbCategory;
     private DataComboBox cmbVendor;
     private JPanel specPanelHolder;
-    private JLabel lblVendor;
-    private JLabel lblPanaNumber;
     private JTextField txtPanaNumber;
-    private JLabel lblItemName;
     private JTextField txtItemname;
     private JSplitPane lowerPanel;
-    private JPanel panel_1;
     private JPanel cartPanel;
     private ItemReceiverPanel itemReceiverPanel;
     private JDateChooser transferDateChooser;
-    private JLabel lblSentDate;
-    private JLabel lblReceiver;
     private JButton btnSend;
     private JButton btnAddItem;
     private JPanel addToCartPanel;
     private JButton btnDelete;
-    private JPanel panel_3;
-    private JLabel lblNiksasaPanaNumber;
-    private JLabel lblRequestNumber;
-    private JTextField txtTransferpananumber;
     private JTextField txtRequestnumber;
     private JButton btnReset;
     private JLabel lblKhataNumber;
@@ -104,7 +91,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
         init();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) { ;
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
@@ -133,13 +120,13 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
             lowerPanel.setLeftComponent(getLowerSplitPane());
 
-            panel_1 = new JPanel();
-            lowerPanel.setRightComponent(panel_1);
-            panel_1.setLayout(new BorderLayout(0, 0));
+            JPanel panel1 = new JPanel();
+            lowerPanel.setRightComponent(panel1);
+            panel1.setLayout(new BorderLayout(0, 0));
 
             cartPanel = new JPanel();
             cartPanel.setBorder(new TitledBorder(null, "Transfer Entry", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-            panel_1.add(cartPanel, BorderLayout.CENTER);
+            panel1.add(cartPanel, BorderLayout.CENTER);
             cartPanel.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,
                     FormFactory.RELATED_GAP_COLSPEC, ColumnSpec.decode("max(45dlu;default)"), FormFactory.RELATED_GAP_COLSPEC,
                     ColumnSpec.decode("left:max(27dlu;default)"), FormFactory.RELATED_GAP_COLSPEC, ColumnSpec.decode("max(15dlu;default)"),
@@ -149,26 +136,21 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
                     RowSpec.decode("top:max(31dlu;default)"), FormFactory.RELATED_GAP_ROWSPEC, RowSpec.decode("top:max(23dlu;default)"),
                     FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
-            panel_3 = new JPanel();
-            cartPanel.add(panel_3, "2, 2, fill, fill");
-            panel_3.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,}, new RowSpec[]{
+            JPanel panel3 = new JPanel();
+            cartPanel.add(panel3, "2, 2, fill, fill");
+            panel3.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,}, new RowSpec[]{
                     FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
             btnAddItem = new JButton("Add Item");
-            panel_3.add(btnAddItem, "2, 2");
+            panel3.add(btnAddItem, "2, 2");
 
             btnDelete = new JButton("Remove");
             btnDelete.addActionListener(e -> {
                 if (cartTable.getRowCount() > 0) {
                     int selRow = cartTable.getSelectedRow();
                     if (selRow != -1) {
-                        /**
-                         * if second column doesnot have primary id info,
-                         * then
-                         */
-
                         int selectedId = cartDataModel.getKeyAtRow(selRow);
-                        System.out.println("Selected ID : " + selectedId + "_  >>  row " + selRow);
+                        logger.log(System.Logger.Level.INFO, "Selected ID : " + selectedId + "_  >>  row " + selRow);
                         if (cartDataModel.containsKey(selectedId)) {
                             removeSelectedRowInCartTable(selectedId, selRow);
                         }
@@ -176,15 +158,11 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
                     }
                 }
             });
-            panel_3.add(btnDelete, "2, 4");
+            panel3.add(btnDelete, "2, 4");
             btnAddItem.addActionListener(e -> {
                 if (itemDetailTable.getRowCount() > 0) {
                     int selRow = itemDetailTable.getSelectedRow();
                     if (selRow != -1) {
-                        /**
-                         * if second column doesnot have primary id info,
-                         * then
-                         */
 
                         int selectedId = dataModel.getKeyAtRow(selRow);
 
@@ -199,13 +177,13 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
             cartPanel.add(getAddToCartPane(), "4, 2, 13, 1, fill, top");
 
-            lblReceiver = new JLabel("Receiver:");
+            JLabel lblReceiver = new JLabel("Receiver:");
             cartPanel.add(lblReceiver, "4, 4");
 
             itemReceiverPanel = new ItemReceiverPanel();
             cartPanel.add(itemReceiverPanel, "6, 4, fill, top");
 
-            lblSentDate = new JLabel("Date");
+            JLabel lblSentDate = new JLabel("Date");
             cartPanel.add(lblSentDate, "10, 4, default, bottom");
 
             transferDateChooser = new JDateChooser();
@@ -220,7 +198,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
                     return;
                 }
                 btnSend.setEnabled(false);
-                SwingWorker worker = new SwingWorker<Void, Void>() {
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
 
                     @Override
                     protected Void doInBackground() {
@@ -230,10 +208,9 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
                 };
                 worker.addPropertyChangeListener(evt -> {
-                    System.out.println("Event " + evt + " name" + evt.getPropertyName() + " value " + evt.getNewValue());
+                    logger.log(System.Logger.Level.INFO, "Event " + evt + " name" + evt.getPropertyName() + " value " + evt.getNewValue());
                     if ("DONE".equals(evt.getNewValue().toString())) {
                         btnSend.setEnabled(true);
-                        // task.setText("Test");
                     }
                 });
 
@@ -242,14 +219,14 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
             });
             cartPanel.add(btnSend, "16, 4, default, bottom");
 
-            lblNiksasaPanaNumber = new JLabel("Niksasa Pana Number");
+            JLabel lblNiksasaPanaNumber = new JLabel("Niksasa Pana Number");
             cartPanel.add(lblNiksasaPanaNumber, "4, 6, left, default");
 
-            txtTransferpananumber = new JTextField();
+            JTextField txtTransferpananumber = new JTextField();
             cartPanel.add(txtTransferpananumber, "6, 6, fill, default");
             txtTransferpananumber.setColumns(10);
 
-            lblRequestNumber = new JLabel("Request Number");
+            JLabel lblRequestNumber = new JLabel("Request Number");
             cartPanel.add(lblRequestNumber, "4, 8, left, default");
 
             txtRequestnumber = new JTextField();
@@ -262,7 +239,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
     private void saveTransfer() {
         try {
-            TransferServiceImpl ns = new TransferServiceImpl();
             TransferServiceImpl.saveTransfer(cartTable.getIdAndQuantityMap(), transferDateChooser.getDate(), itemReceiverPanel.getCurrentType(),
                     itemReceiverPanel.getSelectedId(), txtPanaNumber.getText().trim(), txtRequestnumber.getText().trim());
 
@@ -275,10 +251,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
     private void removeSelectedRowInCartTable(int selectedId, int selRow) {
         cartDataModel.removeRowWithKey(selectedId);
         cartDataModel.fireTableDataChanged();
-        // TODO:
         cellEditors.remove(selRow);
-        // cartTable.setModel(cartDataModel);
-        // cartTable.adjustColumns();
     }
 
     private void handleTransferSuccess() {
@@ -299,26 +272,23 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
     private void addSelectedRowInCartTable(int selectedId) {
         try {
             Item bo = (Item) DBUtils.getById(Item.class, selectedId);
-            System.out.println("Adding to cart id = " + selectedId + ">>" + bo.getQuantity() + " >> org " + bo.getOriginalQuantity());
+            logger.log(System.Logger.Level.INFO, "Adding to cart id = " + selectedId + ">>" + bo.getQuantity() + " >> org " + bo.getOriginalQuantity());
             int sn = cartDataModel.getRowCount();
-            if (bo != null) {
 
-                cartDataModel.addRow(new Object[]{++sn, bo.getId(), bo.getName(), bo.getCategory().getCategoryName(), bo.getSpeciifcationString(),
-                        bo.getRackNo(), 0, bo.getUnitsString().getValue()});
-                cartTable.setModel(cartDataModel);
-                cartDataModel.fireTableDataChanged();
-                cellEditors.add(new CartTableQuantityCellEditor(bo.getQuantity()));
-            }
+            cartDataModel.addRow(new Object[]{++sn, bo.getId(), bo.getName(), bo.getCategory().getCategoryName(), bo.getSpeciifcationString(),
+                    bo.getRackNo(), 0, bo.getUnitsString().getValue()});
+            cartTable.setModel(cartDataModel);
+            cartDataModel.fireTableDataChanged();
+            cellEditors.add(new CartTableQuantityCellEditor(bo.getQuantity()));
 
         } catch (Exception e) {
-            System.out.println("populateSelectedRowInForm" + e.getMessage());
+            logger.log(System.Logger.Level.INFO,"populateSelectedRowInForm" + e.getMessage());
             handleDBError(e);
         }
     }
 
     @Override
     public final void init() {
-        /* never forget to call super.init() */
         super.init();
         UIUtils.clearAllFields(upperPane);
         changeStatus(Status.NONE);
@@ -364,16 +334,12 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
     public final void enableDisableComponents() {
         switch (status) {
             case NONE:
-                // UIUtils.toggleAllChildren(buttonPanel, false);
-                // UIUtils.toggleAllChildren(formPanel, false);
                 UIUtils.clearAllFields(formPanel);
                 itemDetailTable.setEnabled(true);
                 btnSave.setEnabled(true);
                 break;
 
             case READ:
-                // UIUtils.toggleAllChildren(formPanel, false);
-                // UIUtils.toggleAllChildren(buttonPanel, true);
                 UIUtils.clearAllFields(formPanel);
                 itemDetailTable.clearSelection();
                 itemDetailTable.setEnabled(true);
@@ -386,24 +352,11 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
     @Override
     public void handleSaveAction() {
-
+        throw new UnsupportedOperationException();
     }
 
     private boolean isValidCart() {
-        if (cartTable.isValidCartQty() && cartTable.getRowCount() > 0 && itemReceiverPanel.isSelected() && transferDateChooser.getDate() != null) {
-            return true;
-        }
-        return false;
-    }
-
-    private void initValidator() {
-
-        if (v != null) {
-            v.resetErrors();
-        }
-
-        v = new Validator(mainApp, true);
-
+        return cartTable.isValidCartQty() && cartTable.getRowCount() > 0 && itemReceiverPanel.isSelected() && transferDateChooser.getDate() != null;
     }
 
     private JPanel getUpperFormPanel() {
@@ -424,27 +377,27 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
                     RowSpec.decode("max(51dlu;default)"), FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
                     FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
-            lblItemName = new JLabel("Item Name");
+            JLabel lblItemName = new JLabel("Item Name");
             formPanel.add(lblItemName, "4, 2");
 
             txtItemname = new JTextField();
             formPanel.add(txtItemname, "8, 2, fill, default");
             txtItemname.setColumns(10);
 
-            lblPanaNumber = new JLabel("Item Pana Number");
+            JLabel lblPanaNumber = new JLabel("Item Pana Number");
             formPanel.add(lblPanaNumber, "12, 2");
 
             txtPanaNumber = new JTextField();
             formPanel.add(txtPanaNumber, "16, 2, fill, default");
             txtPanaNumber.setColumns(10);
 
-            JLabel lblN = new JLabel("Category");
+            JLabel lblN = new JLabel(CATEGORY);
             formPanel.add(lblN, "4, 4");
 
             cmbCategory = new DataComboBox();
             formPanel.add(cmbCategory, "8, 4, fill, default");
 
-            lblVendor = new JLabel("Vendor");
+            JLabel lblVendor = new JLabel("Vendor");
             formPanel.add(lblVendor, "12, 4");
 
             cmbVendor = new DataComboBox();
@@ -504,7 +457,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
     private void readAndShowAll() {
         try {
-            ItemServiceImpl is = new ItemServiceImpl();
             List<Item> brsL;
             List<String> specs = null;
             if (currentSpecificationPanel == null) {
@@ -580,7 +532,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
 
             itemDetailTable = new BetterJTable(dataModel);
             itemDetailTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            JScrollPane sp = new JScrollPane(itemDetailTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            JScrollPane sp = new JScrollPane(itemDetailTable, javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 
             lowerPane.add(sp, BorderLayout.CENTER);
         }
@@ -596,18 +548,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
             cartTable = new CartTable(cartDataModel);
             cartTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             cartTable.setRowSorter(null);
-            Object key = cartTable.getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).get(KeyStroke.getKeyStroke("ENTER"));
-            final Action action = cartTable.getActionMap().get(key);
-            Action custom = new AbstractAction("wrap") {
-
-                public void actionPerformed(ActionEvent e) {
-
-                }
-
-            };
-            // cartTable.getActionMap().put(key, custom);
-            JScrollPane sp = new JScrollPane(cartTable, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-            // TODO: number of rows into scrl pane
+            JScrollPane sp = new JScrollPane(cartTable, javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
             addToCartPanel.add(sp, BorderLayout.CENTER);
         }
         return addToCartPanel;
@@ -631,8 +572,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
          */
         public final Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int rowIndex, int vColIndex) {
 
-            if (isSelected) {
-            }
 
             // Configure the component with the specified value
             ((JTextField) component).setText(value.toString());
@@ -669,8 +608,9 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
             super(dm);
         }
 
+        @Override
         public final boolean isCellEditable(int row, int column) {
-            return column == qtyCol;
+            return column == QUANTITY_COL;
         }
 
         /**
@@ -696,8 +636,12 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
             Map<Integer, Integer> cartIdQtyMap = new HashMap<>();
             int rows = getRowCount();
             for (int i = 0; i < rows; i++) {
+                /**
+                 * ID at sec col, Qty at 7th
+                 */
+                int idCol = 1;
                 Integer id = Integer.parseInt(getValueAt(i, idCol).toString());
-                Integer qty = Integer.parseInt(getValueAt(i, qtyCol).toString());
+                Integer qty = Integer.parseInt(getValueAt(i, QUANTITY_COL).toString());
                 /**
                  * Put the items that have qty >0 only
                  */
@@ -709,8 +653,9 @@ public class ItemTransferPanel extends AbstractFunctionPanel {
         }
 
         // Determine editor to be used by row
+        @Override
         public final TableCellEditor getCellEditor(int row, int column) {
-            if (column == qtyCol) {
+            if (column == QUANTITY_COL) {
                 return (TableCellEditor) cellEditors.get(row);
             } else
                 return super.getCellEditor(row, column);

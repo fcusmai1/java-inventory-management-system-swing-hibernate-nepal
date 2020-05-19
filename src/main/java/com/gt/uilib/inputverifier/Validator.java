@@ -35,8 +35,6 @@ public class Validator {
     private boolean isShowWarningDialog;
     private String dialogErrorMessage;
 
-    // JComponent firstErrorField = null;
-
     public Validator(Window parent) {
         this(parent, false, "");
 
