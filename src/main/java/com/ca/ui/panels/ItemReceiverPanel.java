@@ -23,22 +23,7 @@ public class ItemReceiverPanel extends JPanel {
     private final JRadioButton rdbtnPersonnal;
     private final JRadioButton rdbtnOfficial;
     private final JRadioButton rdbtnLilam;
-    private final ActionListener radioButtonAL = new ActionListener() {
-        public void actionPerformed(ActionEvent actionEvent) {
-            AbstractButton aButton = (AbstractButton) actionEvent.getSource();
-//			System.out.println("Selected: " + aButton.getText());
-            if (aButton == rdbtnOfficial) {
-                currentType = ReceiverType.OFFICIAL;
-            } else if (aButton == rdbtnPersonnal) {
-                currentType = ReceiverType.PERSONNAL;
-            } else if (aButton == rdbtnLilam) {
-                currentType = ReceiverType.LILAM;
-            }
-//			System.out.println(" current type >> " + currentType);
-            handleSelection();
-
-        }
-    };
+    static transient System.Logger logger;
 
     public ItemReceiverPanel() {
         setLayout(new FormLayout(new ColumnSpec[]{ColumnSpec.decode("max(38dlu;default)"), FormFactory.RELATED_GAP_COLSPEC,
@@ -46,6 +31,8 @@ public class ItemReceiverPanel extends JPanel {
                 FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
         rdbtnPersonnal = new JRadioButton("Personnal");
+        ActionListener radioButtonAL = null;
+
         rdbtnPersonnal.addActionListener(radioButtonAL);
         add(rdbtnPersonnal, "1, 2");
 
@@ -61,7 +48,6 @@ public class ItemReceiverPanel extends JPanel {
 
         bg.add(rdbtnOfficial);
         bg.add(rdbtnLilam);
-
         dataCombo = new DataComboBox();
         add(dataCombo, "1, 4, 5, 1, fill, default");
 
@@ -71,7 +57,7 @@ public class ItemReceiverPanel extends JPanel {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e);
         }
         JFrame jf = new JFrame();
         jf.getContentPane().add(new ItemReceiverPanel());
@@ -81,7 +67,6 @@ public class ItemReceiverPanel extends JPanel {
     }
 
     public final ReceiverType getCurrentType() {
-//		System.out.println("ItemReceiverPanel.getCurrentType() " + currentType);
         return currentType;
     }
 
@@ -168,15 +153,12 @@ public class ItemReceiverPanel extends JPanel {
                             dataCombo.addRow(new Object[]{c.getId(), c.getName(), c.getAddress()});
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.log(System.Logger.Level.ERROR, e);
                     }
-                    // dataCombo.setEditable(false);
                     break;
                 case PERSONNAL:
 
                     dataCombo.init();
-                    // FIXME: filter fix
-                    // dataCombo.setEditable(true);
                     rdbtnPersonnal.setSelected(true);
                     dataCombo.setEnabled(true);
                     try {
@@ -185,9 +167,8 @@ public class ItemReceiverPanel extends JPanel {
                             dataCombo.addRow(new Object[]{c.getId(), c.getFirstName(), c.getLastName()});
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.log(System.Logger.Level.ERROR, e);
                     }
-                    // dataCombo.initArray();
                     break;
                 default:
                     rdbtnLilam.setSelected(true);
