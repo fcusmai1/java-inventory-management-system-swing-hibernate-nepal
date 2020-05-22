@@ -9,6 +9,8 @@ import com.gt.uilib.components.input.GTextArea;
 import com.gt.uilib.components.input.NumberTextField;
 import com.toedter.calendar.JDateChooser;
 
+import org.apache.log4j.Level;
+
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -34,6 +36,7 @@ public class Validator {
     private Window parent;
     private boolean isShowWarningDialog;
     private String dialogErrorMessage;
+    static  System.Logger logger;
 
     public Validator(Window parent) {
         this(parent, false, "");
@@ -49,6 +52,9 @@ public class Validator {
         color = new Color(243, 255, 59);
         this.dialogErrorMessage = dialogErrorMessage;
         tasks = new ArrayList<>();
+        if(parent.isActive()) {
+            color = new Color(243, 255, 59);
+        }
     }
 
     private synchronized void addTask(Validator.Task task) {
@@ -106,7 +112,6 @@ public class Validator {
 
         int errorCount = 0;
         int firstErrorCount = 0;
-        // firstErrorField = null;
         for (Validator.Task task : tasks) {
             if (!validate(task)) {
                 errorCount++;
@@ -117,7 +122,6 @@ public class Validator {
         }
 
         if (isShowWarningDialog && errorCount > 0) {
-            // System.out.println(firstErrorField);
             WarningDialog warn = new WarningDialog(dialogErrorMessage);
             warn.showWarning();
             // show focus in first component of validator task list
@@ -125,12 +129,12 @@ public class Validator {
             jtc.grabFocus();
 
         }
-        System.out.println("validating ... " + errorCount);
+        logger.log(System.Logger.Level.ALL, "validating ... " + errorCount);
         return (errorCount == 0);
     }
 
     protected final boolean validationCriteria(Task task) {
-
+        boolean isValid = false;
         JComponent jc = task.comp;
 
         if (jc instanceof NumberTextField) {
@@ -145,21 +149,21 @@ public class Validator {
              * if value is empty and is not compulsory, then valid
              */
             if (StringUtils.isEmpty(input) && !task.isRequired) {
-                return true;
+                isValid =  true;
             }
 
             /**
              * if value is empty and is compulsory, the invalid
              */
             if (StringUtils.isEmpty(input) && task.isRequired) {
-                return false;
+                isValid =  false;
             }
 
             if (RegexUtils.matches(input, task.regex)) {
-                return true;
+                isValid =  true;
             }
 
-            return false;
+            return isValid;
 
         }
         if (jc instanceof JDateChooser) {
@@ -189,7 +193,6 @@ public class Validator {
 
         }
         if (jc instanceof SpecificationPanel) {
-            SpecificationPanel spp = (SpecificationPanel) jc;
             return SpecificationPanel.isValidDataEntered();
         }
         if (jc instanceof DataComboBox) {
@@ -299,7 +302,7 @@ public class Validator {
             popup.getContentPane().add(messageLabel);
             popup.setFocusableWindowState(false);
             popup.addMouseListener(new MouseAdapter() {
-
+                @Override
                 public void mouseReleased(MouseEvent e) {
                     popup.setVisible(false);
                 }
@@ -308,7 +311,6 @@ public class Validator {
 
         private void showPopup() {
             if (orgColor == null) {
-                // orgColor = comp.getBackground();
             }
             if (comp instanceof JTextComponent || comp instanceof JDateChooser)
                 comp.setBackground(Color.PINK);
@@ -318,17 +320,6 @@ public class Validator {
                 dc.setBackground(Color.PINK);
 
             }
-
-            // if (showPopup) {
-            // // popup.setSize(0, 0);
-            // popup.setLocationRelativeTo(comp);
-            // Point point = popup.getLocation();
-            // Dimension cDim = comp.getSize();
-            // popup.setLocation(point.x - (int) cDim.getWidth() / 2, point.y +
-            // (int) cDim.getHeight() / 2);
-            // popup.pack();
-            // popup.setVisible(true);
-            // }
         }
 
         private void hideErrorInfo() {
