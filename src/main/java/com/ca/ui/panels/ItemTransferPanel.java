@@ -25,6 +25,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.Serializable;
 import java.util.*;
 import java.util.List;
@@ -34,7 +35,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private static final long serialVersionUID = -5535283266424039057L;
     private static final int QUANTITY_COL = 6;
     public static final String CATEGORY = "Category";
-    System.Logger logger;
+    static transient System.Logger logger;
 
     private final String[] header = new String[]{"", "ID", "Pana Number", "Name", CATEGORY, "Specification", "Parts Number", "Serial Number", "Rack Number",
             "Purchase date", "Added date", "Vendor", "Quantity", "Unit", "Rate"};
@@ -59,24 +60,14 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private ItemReceiverPanel itemReceiverPanel;
     private JDateChooser transferDateChooser;
     private JButton btnSend;
-    private JButton btnAddItem;
     private JPanel addToCartPanel;
-    private JButton btnDelete;
     private JTextField txtRequestnumber;
-    private JButton btnReset;
-    private JLabel lblKhataNumber;
-    private JLabel lblDakhilaNumber;
     private JTextField txtKhatanumber;
     private JTextField txtDakhilanumber;
-    private JLabel lblFrom;
     private JDateChooser txtFromDate;
-    private JLabel lblTo;
     private JDateChooser txtToDate;
 
     public ItemTransferPanel() {
-        /**
-         * all gui components added from here;
-         */
         JSplitPane splitPane = new JSplitPane();
         splitPane.setContinuousLayout(false);
         splitPane.setResizeWeight(0.1);
@@ -85,17 +76,14 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
         splitPane.setLeftComponent(getUpperSplitPane());
         splitPane.setRightComponent(getLowerPanel());
 
-        /**
-         * never forget to call after setting up UI
-         */
         init();
     }
 
-    public static void main(String[] args) { ;
+    public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e);
         }
         EventQueue.invokeLater(() -> {
             try {
@@ -106,7 +94,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
                 jf.setVisible(true);
                 jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(System.Logger.Level.ERROR, e);
             }
         });
     }
@@ -136,44 +124,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
                     RowSpec.decode("top:max(31dlu;default)"), FormFactory.RELATED_GAP_ROWSPEC, RowSpec.decode("top:max(23dlu;default)"),
                     FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
-            JPanel panel3 = new JPanel();
-            cartPanel.add(panel3, "2, 2, fill, fill");
-            panel3.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,}, new RowSpec[]{
-                    FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
-
-            btnAddItem = new JButton("Add Item");
-            panel3.add(btnAddItem, "2, 2");
-
-            btnDelete = new JButton("Remove");
-            btnDelete.addActionListener(e -> {
-                if (cartTable.getRowCount() > 0) {
-                    int selRow = cartTable.getSelectedRow();
-                    if (selRow != -1) {
-                        int selectedId = cartDataModel.getKeyAtRow(selRow);
-                        logger.log(System.Logger.Level.INFO, "Selected ID : " + selectedId + "_  >>  row " + selRow);
-                        if (cartDataModel.containsKey(selectedId)) {
-                            removeSelectedRowInCartTable(selectedId, selRow);
-                        }
-
-                    }
-                }
-            });
-            panel3.add(btnDelete, "2, 4");
-            btnAddItem.addActionListener(e -> {
-                if (itemDetailTable.getRowCount() > 0) {
-                    int selRow = itemDetailTable.getSelectedRow();
-                    if (selRow != -1) {
-
-                        int selectedId = dataModel.getKeyAtRow(selRow);
-
-                        if (!cartDataModel.containsKey(selectedId)) {
-                            addSelectedRowInCartTable(selectedId);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "This Item Already Selected", "Duplicate Selection", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                }
-            });
+            compileLowerPannel();
 
             cartPanel.add(getAddToCartPane(), "4, 2, 13, 1, fill, top");
 
@@ -237,6 +188,34 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
         return lowerPanel;
     }
 
+    private void compileLowerPannel() {
+
+        JPanel panel3 = new JPanel();
+        cartPanel.add(panel3, "2, 2, fill, fill");
+        panel3.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.RELATED_GAP_COLSPEC, FormFactory.DEFAULT_COLSPEC,}, new RowSpec[]{
+                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
+
+        JButton btnAddItem = new JButton("Add Item");
+        panel3.add(btnAddItem, "2, 2");
+
+        JButton btnDelete = new JButton("Remove");
+        btnDelete.addActionListener(e -> {
+            if (cartTable.getRowCount() > 0) {
+                int selRow = cartTable.getSelectedRow();
+                if (selRow != -1) {
+                    int selectedId = cartDataModel.getKeyAtRow(selRow);
+                    logger.log(System.Logger.Level.INFO, "Selected ID : " + selectedId + "_  >>  row " + selRow);
+                    if (cartDataModel.containsKey(selectedId)) {
+                        removeSelectedRowInCartTable(selectedId, selRow);
+                    }
+
+                }
+            }
+        });
+        panel3.add(btnDelete, "2, 4");
+        btnAddItem.addActionListener(this::actionPerformed);
+    }
+
     private void saveTransfer() {
         try {
             TransferServiceImpl.saveTransfer(cartTable.getIdAndQuantityMap(), transferDateChooser.getDate(), itemReceiverPanel.getCurrentType(),
@@ -282,7 +261,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             cellEditors.add(new CartTableQuantityCellEditor(bo.getQuantity()));
 
         } catch (Exception e) {
-            logger.log(System.Logger.Level.INFO,"populateSelectedRowInForm" + e.getMessage());
+            logger.log(System.Logger.Level.INFO, "populateSelectedRowInForm" + e.getMessage());
             handleDBError(e);
         }
     }
@@ -410,14 +389,14 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             btnSave = new JButton("Search");
             btnSave.addActionListener(e -> handleSearchQuery());
 
-            lblKhataNumber = new JLabel("Khata Number");
+            JLabel lblKhataNumber = new JLabel("Khata Number");
             formPanel.add(lblKhataNumber, "4, 8");
 
             txtKhatanumber = new JTextField();
             formPanel.add(txtKhatanumber, "8, 8, fill, default");
             txtKhatanumber.setColumns(10);
 
-            lblDakhilaNumber = new JLabel("Dakhila Number");
+            JLabel lblDakhilaNumber = new JLabel("Dakhila Number");
             formPanel.add(lblDakhilaNumber, "12, 8");
 
             txtDakhilanumber = new JTextField();
@@ -426,7 +405,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
 
             formPanel.add(btnSave, "18, 8, left, default");
 
-            btnReset = new JButton("Reset");
+            JButton btnReset = new JButton("Reset");
             btnReset.addActionListener(e -> {
                 UIUtils.clearAllFields(formPanel);
                 if (currentSpecificationPanel != null) currentSpecificationPanel.resetAll();
@@ -435,13 +414,13 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             });
             formPanel.add(btnReset, "20, 8");
 
-            lblFrom = new JLabel("From");
+            JLabel lblFrom = new JLabel("From");
             formPanel.add(lblFrom, "4, 10");
 
             txtFromDate = new JDateChooser();
             formPanel.add(txtFromDate, "8, 10, fill, default");
 
-            lblTo = new JLabel("To");
+            JLabel lblTo = new JLabel("To");
             formPanel.add(lblTo, "12, 10");
 
             txtToDate = new JDateChooser();
@@ -468,7 +447,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
                             .trim(), null, txtKhatanumber.getText().trim(), txtDakhilanumber.getText().trim(), txtFromDate.getDate(), txtToDate.getDate(),
                     specs);
 
-            if (brsL == null || brsL.size() == 0) {
+            if (brsL == null || brsL.isEmpty()) {
                 if (true) {
                     JOptionPane.showMessageDialog(null, "No Records Found");
                 }
@@ -479,7 +458,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             }
             showListInGrid(brsL);
         } catch (Exception ee) {
-            ee.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, ee);
         }
     }
 
@@ -508,18 +487,18 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private JPanel getUpperSplitPane() {
         if (upperPane == null) {
             upperPane = new JPanel();
-            GridBagLayout gbl_upperPane = new GridBagLayout();
-            gbl_upperPane.columnWidths = new int[]{728, 0};
-            gbl_upperPane.rowHeights = new int[]{194, 0};
-            gbl_upperPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-            gbl_upperPane.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-            upperPane.setLayout(gbl_upperPane);
-            GridBagConstraints gbc_formPanel = new GridBagConstraints();
-            gbc_formPanel.anchor = GridBagConstraints.NORTH;
-            gbc_formPanel.fill = GridBagConstraints.HORIZONTAL;
-            gbc_formPanel.gridx = 0;
-            gbc_formPanel.gridy = 0;
-            upperPane.add(getUpperFormPanel(), gbc_formPanel);
+            GridBagLayout gridBagLayout = new GridBagLayout();
+            gridBagLayout.columnWidths = new int[]{728, 0};
+            gridBagLayout.rowHeights = new int[]{194, 0};
+            gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+            gridBagLayout.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+            upperPane.setLayout(gridBagLayout);
+            GridBagConstraints gbcFormPanel = new GridBagConstraints();
+            gbcFormPanel.anchor = GridBagConstraints.NORTH;
+            gbcFormPanel.fill = GridBagConstraints.HORIZONTAL;
+            gbcFormPanel.gridx = 0;
+            gbcFormPanel.gridy = 0;
+            upperPane.add(getUpperFormPanel(), gbcFormPanel);
         }
         return upperPane;
     }
@@ -552,6 +531,22 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             addToCartPanel.add(sp, BorderLayout.CENTER);
         }
         return addToCartPanel;
+    }
+
+    private void actionPerformed(ActionEvent e) {
+        if (itemDetailTable.getRowCount() > 0) {
+            int selRow = itemDetailTable.getSelectedRow();
+            if (selRow != -1) {
+
+                int selectedId = dataModel.getKeyAtRow(selRow);
+
+                if (!cartDataModel.containsKey(selectedId)) {
+                    addSelectedRowInCartTable(selectedId);
+                } else {
+                    JOptionPane.showMessageDialog(null, "This Item Already Selected", "Duplicate Selection", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 
     static class CartTableQuantityCellEditor extends AbstractCellEditor implements TableCellEditor {
