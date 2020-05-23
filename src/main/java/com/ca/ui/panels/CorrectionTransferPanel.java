@@ -3,9 +3,8 @@ package com.ca.ui.panels;
 import com.ca.db.model.Transfer;
 import com.ca.db.service.DBUtils;
 import com.ca.db.service.TransferServiceImpl;
-import com.gt.uilib.components.AbstractFunctionPanel;
+import com.gt.common.utils.UIUtils;
 import com.gt.uilib.components.input.NumberTextField;
-import com.gt.uilib.inputverifier.Validator;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -15,20 +14,19 @@ import com.toedter.calendar.JDateChooser;
 import javax.swing.*;
 import java.awt.*;
 
-public class CorrectionTransferPanel extends AbstractFunctionPanel {
+public class CorrectionTransferPanel extends JPanel {
     private JLabel txtItemnmaa;
     private JLabel txtCategoryr;
     private JLabel txtKhatapananumbbber;
-    Validator v;
     private JTextField txtTransferpananum;
     private JTextField txtRequestnum;
     private NumberTextField txtQty;
     private final int currentTransferId;
     private ItemReceiverPanel itemReceiverPanel;
     private JDateChooser transferDateChooser;
-    private JPanel hastantaranStatus;
     private JRadioButton rdbtnHastantaranreceived;
     private JRadioButton rdbtnHastanNotReceived;
+    static transient System.Logger logger;
 
     public CorrectionTransferPanel(int id) {
 
@@ -44,7 +42,7 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e);
         }
         EventQueue.invokeLater(() -> {
             try {
@@ -55,15 +53,13 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
                 jf.setVisible(true);
                 jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(System.Logger.Level.ERROR, e);
             }
         });
     }
 
-    @Override
     public final void init() {
-        /* never forget to call super.init() */
-        super.init();
+        UIUtils.decorateBorders(this);
         try {
             Transfer nik = (Transfer) DBUtils.getById(Transfer.class, currentTransferId);
             txtItemnmaa.setText(nik.getItem().getName());
@@ -81,8 +77,7 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
                 rdbtnHastantaranreceived.setSelected(true);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
 
     }
@@ -144,7 +139,6 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
         add(lblDate, "4, 14");
 
         transferDateChooser = new JDateChooser();
-        // txtDate.setText("Date");
         add(transferDateChooser, "8, 14, fill, default");
 
         JLabel lblReceiver = new JLabel("Receiver");
@@ -156,7 +150,7 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
         JLabel lblHastantaranStatus = new JLabel("Hastantaran Status");
         add(lblHastantaranStatus, "4, 18");
 
-        hastantaranStatus = new JPanel();
+        JPanel hastantaranStatus = new JPanel();
 
         hastantaranStatus.setLayout(new FormLayout(new ColumnSpec[]{FormFactory.DEFAULT_COLSPEC,}, new RowSpec[]{
                 FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
@@ -201,32 +195,22 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
             return;
         }
         try {
-            TransferServiceImpl ns = new TransferServiceImpl();
             TransferServiceImpl.deleteTransfer(currentTransferId);
 
             handleDeleteSuccess();
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
     }
 
-    @Override
-    public final String getFunctionName() {
-        return "Transfer Correction and Edit, Hastantaran Register";
-    }
 
     private boolean isValidData() {
         int qty = Integer.parseInt(txtQty.getText());
 
-        if (qty > 0 && itemReceiverPanel.isSelected() && transferDateChooser.getDate() != null) {
-            return true;
-        }
-        return false;
+        return qty > 0 && itemReceiverPanel.isSelected() && transferDateChooser.getDate() != null;
 
     }
 
-    @Override
     public final void handleSaveAction() {
         if (!isValidData()) {
             JOptionPane.showMessageDialog(null, "Please enter the required values before saving");
@@ -237,19 +221,17 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
         }
         try {
 
-            int hastan = -1;
+            int hastan;
             if (rdbtnHastanNotReceived.isSelected()) {
                 hastan = Transfer.HASTANTARAN_NOT_RECEIVED;
             } else {
                 hastan = Transfer.HASTANTARAN_RECEIVED;
             }
-            TransferServiceImpl ns = new TransferServiceImpl();
             TransferServiceImpl.updateTransfer(currentTransferId, Integer.parseInt(txtQty.getText()), transferDateChooser.getDate(), itemReceiverPanel.getCurrentType(),
                     itemReceiverPanel.getSelectedId(), txtTransferpananum.getText().trim(), txtRequestnum.getText().trim(), hastan);
             handleSuccess();
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
     }
 
@@ -265,9 +247,8 @@ public class CorrectionTransferPanel extends AbstractFunctionPanel {
         w.setVisible(false);
     }
 
-    @Override
     public void enableDisableComponents() {
-
+     throw new UnsupportedOperationException();
     }
 
 }

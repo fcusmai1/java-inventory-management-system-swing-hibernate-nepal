@@ -3,6 +3,10 @@ package com.ca.ui.panels;
 import javax.swing.*;
 
 class DataEntryUtils {
+    private DataEntryUtils() {
+        throw new UnsupportedOperationException();
+    }
+
     public static boolean confirmDBSave() {
         return confirm("Are you sure to save");
     }
@@ -17,9 +21,6 @@ class DataEntryUtils {
 
     private static boolean confirm(String msg) {
         int answer = JOptionPane.showConfirmDialog(null, msg, "Are you Sure ?", JOptionPane.YES_NO_OPTION);
-        if (answer == JOptionPane.OK_OPTION) {
-            return true;
-        }
-        return false;
+        return answer == JOptionPane.OK_OPTION;
     }
 }

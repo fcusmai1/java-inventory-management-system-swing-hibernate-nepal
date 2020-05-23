@@ -12,7 +12,6 @@ import com.gt.common.utils.UIUtils;
 import com.gt.uilib.components.AbstractFunctionPanel;
 import com.gt.uilib.components.input.DataComboBox;
 import com.gt.uilib.components.table.BetterJTable;
-import com.gt.uilib.components.table.BetterJTableNoSorting;
 import com.gt.uilib.components.table.EasyTableModel;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -22,30 +21,17 @@ import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.Map.Entry;
 
-/**
- * entry of returned items
- *
- * @author GT
- */
 public class ItemReturnPanel extends AbstractFunctionPanel {
     public static final String CATEGORY = "Category";
 
-    private final String[] damageStatusStr = new String[]{"", "Good", "Unrepairable", "Needs Repair", "Exemption"};
-    private ReturnTable returnTable;
     private JPanel formPanel = null;
     private JPanel buttonPanel;
     private JDateChooser txtFromDate;
     private JDateChooser txtToDate;
-    transient List<Object> cellQtyEditors;
-    private static final int QUANTITY_COL = 5;
-    private static final int DAMAGE_STATUS_COL = 4;
     private JButton btnSave;
     private JPanel upperPane;
     private BetterJTable table;
@@ -275,8 +261,8 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
     private void showListInGrid(List<Transfer> brsL) {
         dataModel.resetModel();
         int sn = 0;
-        String transferTYpe = "";
-        String sentTo = "";
+        String transferTYpe;
+        String sentTo ;
         for (Transfer bo : brsL) {
             transferTYpe = "";
             sentTo = "";
@@ -310,79 +296,5 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
             upperPane.add(getButtonPanel(), BorderLayout.SOUTH);
         }
         return upperPane;
-    }
-
-
-    class ReturnTable extends BetterJTableNoSorting {
-
-        /**
-         * ID at sec col, Qty at 6th
-         */
-
-        ReturnTable(TableModel dm) {
-            super(dm);
-        }
-
-        @Override
-        public final boolean isCellEditable(int row, int column) {
-            return column == QUANTITY_COL || column == DAMAGE_STATUS_COL;
-        }
-
-        /**
-         * if at lease 1 item has greater than 0 qty, others will be ignored
-         * during saving
-         *
-         * @return
-         */
-        final boolean isValidCartQty() {
-            Map<Integer, ReturnedItemDTO> cartMap = returnTable.getIdAndQuantityMap();
-            for (Entry<Integer, ReturnedItemDTO> entry : cartMap.entrySet()) {
-                ReturnedItemDTO ret = entry.getValue();
-                int qty = ret.qty;
-                int damageStatus = ret.damageStatus;
-                if (qty > 0 && damageStatus > 0) {
-                    return true;
-                }
-            }
-            return false;
-
-        }
-
-        private int getDamageStatusIndex(String str) {
-            for (int i = 0; i < damageStatusStr.length; i++) {
-                if (str.trim().equals(damageStatusStr[i])) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        final Map<Integer, ReturnedItemDTO> getIdAndQuantityMap() {
-            Map<Integer, ReturnedItemDTO> cartIdQtyMap = new HashMap<>();
-            int rows = getRowCount();
-            for (int i = 0; i < rows; i++) {
-                int idCol = 1;
-                Integer id = Integer.parseInt(getValueAt(i, idCol).toString());
-                int qty = Integer.parseInt(getValueAt(i, QUANTITY_COL).toString());
-                int damageStatus = getDamageStatusIndex(getValueAt(i, DAMAGE_STATUS_COL).toString());
-
-                /**
-                 * Put the items that have qty >0 only
-                 */
-                if (qty > 0) {
-                    cartIdQtyMap.put(id, new ReturnedItemDTO(qty, damageStatus, ""));
-                }
-            }
-            return cartIdQtyMap;
-        }
-
-        @Override
-        public final TableCellEditor getCellEditor(int row, int column) {
-            if (column == QUANTITY_COL) {
-                return (TableCellEditor) cellQtyEditors.get(row);
-            } else
-                return super.getCellEditor(row, column);
-        }
-
     }
 }

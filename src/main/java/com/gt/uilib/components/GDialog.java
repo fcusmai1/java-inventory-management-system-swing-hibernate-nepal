@@ -3,19 +3,15 @@ package com.gt.uilib.components;
 import javax.swing.*;
 import java.awt.*;
 
-public class GDialog extends JDialog {
-    AbstractFunctionPanel funcPane;
-
-    public GDialog(Dialog owner, String title, boolean modal) {
-        super(owner, title, modal);
-    }
+public class GDialog extends Dialog {
+    JPanel funcPane;
 
     public GDialog(Frame owner, String title, boolean modal) {
         super(owner, title, modal);
     }
 
-    public final void setAbstractFunctionPanel(AbstractFunctionPanel abstractFunctionPanel, Dimension dm) {
-        this.funcPane = abstractFunctionPanel;
+    public final void setAbstractFunctionPanel(JPanel jPanel, Dimension dm) {
+        this.funcPane = jPanel;
 
         add(funcPane);
         setSize(dm);

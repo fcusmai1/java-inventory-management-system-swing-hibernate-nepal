@@ -1,18 +1,13 @@
 package com.ca.ui.panels;
 
-import com.ca.db.model.Category;
 import com.ca.db.model.Item;
-import com.ca.db.model.Vendor;
 import com.ca.db.service.DBUtils;
 import com.ca.db.service.ItemServiceImpl;
 import com.ca.db.service.TransferServiceImpl;
-import com.gt.common.constants.Status;
 import com.gt.common.utils.DateTimeUtils;
 import com.gt.common.utils.UIUtils;
-import com.gt.uilib.components.AbstractFunctionPanel;
 import com.gt.uilib.components.input.DataComboBox;
 import com.gt.uilib.components.table.BetterJTable;
-import com.gt.uilib.components.table.BetterJTableNoSorting;
 import com.gt.uilib.components.table.EasyTableModel;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -31,7 +26,7 @@ import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class ItemTransferPanel extends AbstractFunctionPanel implements Serializable {
+public class ItemTransferPanel extends JPanel implements Serializable {
     private static final long serialVersionUID = -5535283266424039057L;
     private static final int QUANTITY_COL = 6;
     public static final String CATEGORY = "Category";
@@ -43,7 +38,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private JPanel formPanel = null;
     private SpecificationPanel currentSpecificationPanel;
     transient List<Object> cellEditors;
-    private JButton btnSave;
     private JPanel upperPane;
     private JPanel lowerPane;
     private BetterJTable itemDetailTable;
@@ -52,7 +46,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private EasyTableModel cartDataModel;
     private DataComboBox cmbCategory;
     private DataComboBox cmbVendor;
-    private JPanel specPanelHolder;
     private JTextField txtPanaNumber;
     private JTextField txtItemname;
     private JSplitPane lowerPanel;
@@ -75,8 +68,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
         add(splitPane, BorderLayout.CENTER);
         splitPane.setLeftComponent(getUpperSplitPane());
         splitPane.setRightComponent(getLowerPanel());
-
-        init();
     }
 
     public static void main(String[] args) {
@@ -149,7 +140,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
                     return;
                 }
                 btnSend.setEnabled(false);
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                SwingWorker<Void, Void> worker = new SwingWorker<>() {
 
                     @Override
                     protected Void doInBackground() {
@@ -223,7 +214,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
 
             handleTransferSuccess();
         } catch (Exception er) {
-            handleDBError(er);
+            logger.log(System.Logger.Level.ERROR, er);
         }
     }
 
@@ -262,77 +253,9 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
 
         } catch (Exception e) {
             logger.log(System.Logger.Level.INFO, "populateSelectedRowInForm" + e.getMessage());
-            handleDBError(e);
         }
     }
 
-    @Override
-    public final void init() {
-        super.init();
-        UIUtils.clearAllFields(upperPane);
-        changeStatus(Status.NONE);
-        intCombo();
-    }
-
-    private void intCombo() {
-        try {
-            /* Category Combo */
-            cmbCategory.init();
-            List<Category> cl = DBUtils.readAll(Category.class);
-            for (Category c : cl) {
-                cmbCategory.addRow(new Object[]{c.getId(), c.getCategoryName()});
-            }
-
-            /* Vendor Combo */
-            cmbVendor.init();
-            List<Vendor> vl = DBUtils.readAll(Vendor.class);
-            for (Vendor v : vl) {
-                cmbVendor.addRow(new Object[]{v.getId(), v.getName(), v.getAddress()});
-            }
-
-        } catch (Exception e) {
-            handleDBError(e);
-        }
-        /* Item listener on cmbCategory - to change specification panel */
-        cmbCategory.addItemListener(e -> {
-            int id = cmbCategory.getSelectedId();
-            specPanelHolder.removeAll();
-            currentSpecificationPanel = null;
-            if (id > 0) {
-                currentSpecificationPanel = new SpecificationPanel(id);
-                specPanelHolder.add(currentSpecificationPanel, FlowLayout.LEFT);
-            }
-            specPanelHolder.repaint();
-            specPanelHolder.revalidate();
-
-        });
-
-    }
-
-    @Override
-    public final void enableDisableComponents() {
-        switch (status) {
-            case NONE:
-                UIUtils.clearAllFields(formPanel);
-                itemDetailTable.setEnabled(true);
-                btnSave.setEnabled(true);
-                break;
-
-            case READ:
-                UIUtils.clearAllFields(formPanel);
-                itemDetailTable.clearSelection();
-                itemDetailTable.setEnabled(true);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    @Override
-    public void handleSaveAction() {
-        throw new UnsupportedOperationException();
-    }
 
     private boolean isValidCart() {
         return cartTable.isValidCartQty() && cartTable.getRowCount() > 0 && itemReceiverPanel.isSelected() && transferDateChooser.getDate() != null;
@@ -382,11 +305,11 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             cmbVendor = new DataComboBox();
             formPanel.add(cmbVendor, "16, 4, fill, default");
 
-            specPanelHolder = new JPanel();
+            JPanel specPanelHolder = new JPanel();
             formPanel.add(specPanelHolder, "4, 6, 19, 1, fill, fill");
             specPanelHolder.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 
-            btnSave = new JButton("Search");
+            JButton btnSave = new JButton("Search");
             btnSave.addActionListener(e -> handleSearchQuery());
 
             JLabel lblKhataNumber = new JLabel("Khata Number");
@@ -437,7 +360,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
     private void readAndShowAll() {
         try {
             List<Item> brsL;
-            List<String> specs = null;
+            List<String> specs;
             if (currentSpecificationPanel == null) {
                 specs = new LinkedList<>();
             } else {
@@ -448,9 +371,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
                     specs);
 
             if (brsL == null || brsL.isEmpty()) {
-                if (true) {
-                    JOptionPane.showMessageDialog(null, "No Records Found");
-                }
+                JOptionPane.showMessageDialog(null, "No Records Found");
                 dataModel.resetModel();
                 dataModel.fireTableDataChanged();
                 itemDetailTable.adjustColumns();
@@ -479,10 +400,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
         });
     }
 
-    @Override
-    public final String getFunctionName() {
-        return "Item Transfer Entry";
-    }
 
     private JPanel getUpperSplitPane() {
         if (upperPane == null) {
@@ -551,20 +468,12 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
 
     static class CartTableQuantityCellEditor extends AbstractCellEditor implements TableCellEditor {
         final JComponent component = new JTextField();
-        int maxQuantity = 0;
+        int maxQuantity;
 
         CartTableQuantityCellEditor(int maxQuantity) {
             this.maxQuantity = maxQuantity;
         }
 
-        /*
-         * This method is called when a cell value is edited by the
-         * user.(non-Javadoc)
-         *
-         * @see
-         * javax.swing.table.TableCellEditor#getTableCellEditorComponent(javax
-         * .swing.JTable, java.lang.Object, boolean, int, int)
-         */
         public final Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int rowIndex, int vColIndex) {
 
 
@@ -580,7 +489,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
          * It must return the new value to be stored in the cell.
          */
         public final Object getCellEditorValue() {
-            int retQty = 0;
+            int retQty;
             try {
                 retQty = Integer.parseInt(((JTextField) component).getText());
                 // if max
@@ -597,7 +506,7 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
         }
     }
 
-    class CartTable extends BetterJTableNoSorting {
+    class CartTable extends JTable {
 
         CartTable(TableModel dm) {
             super(dm);
@@ -608,12 +517,6 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             return column == QUANTITY_COL;
         }
 
-        /**
-         * if at lease 1 item has greater than 0 qty, others will be ignored
-         * during saving
-         *
-         * @return
-         */
         final boolean isValidCartQty() {
             Map<Integer, Integer> cartMap = cartTable.getIdAndQuantityMap();
             for (Entry<Integer, Integer> entry : cartMap.entrySet()) {
@@ -631,15 +534,9 @@ public class ItemTransferPanel extends AbstractFunctionPanel implements Serializ
             Map<Integer, Integer> cartIdQtyMap = new HashMap<>();
             int rows = getRowCount();
             for (int i = 0; i < rows; i++) {
-                /**
-                 * ID at sec col, Qty at 7th
-                 */
                 int idCol = 1;
                 Integer id = Integer.parseInt(getValueAt(i, idCol).toString());
-                Integer qty = Integer.parseInt(getValueAt(i, QUANTITY_COL).toString());
-                /**
-                 * Put the items that have qty >0 only
-                 */
+                int qty = Integer.parseInt(getValueAt(i, QUANTITY_COL).toString());
                 if (qty > 0) {
                     cartIdQtyMap.put(id, qty);
                 }
