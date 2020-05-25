@@ -10,7 +10,7 @@ import javax.swing.table.DefaultTableModel;
 public class EasyTableModel extends DefaultTableModel {
     private static final long serialVersionUID = 8952987986047661236L;
     protected String[] header;
-    private int KEY_ID_COLUMN = 1;
+    private int keyIdColumn = 1;
 
     protected EasyTableModel() {
     }
@@ -23,11 +23,11 @@ public class EasyTableModel extends DefaultTableModel {
     }
 
     public final Integer getKeyAtRow(int row) {
-        return (Integer) getValueAt(row, KEY_ID_COLUMN);
+        return (Integer) getValueAt(row, keyIdColumn);
     }
 
     public final void setKeyColumn(int keyCol) {
-        this.KEY_ID_COLUMN = keyCol;
+        this.keyIdColumn = keyCol;
     }
 
     /**
@@ -55,27 +55,23 @@ public class EasyTableModel extends DefaultTableModel {
         int index = 0;
 
         int rowC = getRowCount();
-//		System.out.println("removing key "+key +"   count "+rowC);
         for (int i = 0; i < rowC; i++) {
             Integer keyAtRowI = getKeyAtRow(i);
             if (keyAtRowI.equals(key)) {
                 removeRow(index);
-//				System.out.println("Row count after removal  "+getRowCount());
                 return;
             }
             index++;
         }
 
     }
-
+    @Override
     public final void addRow(Object[] values) {
         super.addRow(values);
-//		System.out.println("EasyTableModel.addRow() >>  "+getRowCount());
     }
 
     public final void resetModel() {
         super.setRowCount(0);
     }
-
 
 }

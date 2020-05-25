@@ -8,6 +8,10 @@ import java.awt.event.MouseEvent;
 
 public class BetterJTableNoSorting extends JTable {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private static final Color EVEN_ROW_COLOR = new Color(240, 255, 250);
     private static final Color TABLE_GRID_COLOR = new Color(0xd9d9d9);
 
@@ -16,12 +20,11 @@ public class BetterJTableNoSorting extends JTable {
         init();
         setFillsViewportHeight(true);
         setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-//		setEditable(false);
         putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
 
     public void adjustColumns() {
-//		packAll();
+        setShowGrid(true);
     }
 
     @Override
@@ -29,6 +32,7 @@ public class BetterJTableNoSorting extends JTable {
         return (column == 0 || column == 1) ? Integer.class : Object.class;
     }
 
+    @Override
     public final String getToolTipText(MouseEvent e) {
         int row = rowAtPoint(e.getPoint());
         int column = columnAtPoint(e.getPoint());

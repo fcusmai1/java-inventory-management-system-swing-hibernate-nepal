@@ -12,6 +12,10 @@ import java.util.Map;
 
 public class BetterJTable extends JTable {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private static final Color EVEN_ROW_COLOR = new Color(240, 255, 250);
     private static final Color TABLE_GRID_COLOR = new Color(0xd9d9d9);
 
@@ -20,7 +24,6 @@ public class BetterJTable extends JTable {
         init();
         setFillsViewportHeight(true);
         setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-//		setEditable(false);
         hideCol();
     }
 
@@ -36,7 +39,7 @@ public class BetterJTable extends JTable {
     }
 
     public void adjustColumns() {
-//		packAll();
+        setFillsViewportHeight(true);
     }
 
     @Override
@@ -44,6 +47,7 @@ public class BetterJTable extends JTable {
         return (column == 0) ? Integer.class : Object.class;
     }
 
+    @Override
     public final String getToolTipText(MouseEvent e) {
         int row = rowAtPoint(e.getPoint());
         int column = columnAtPoint(e.getPoint());
