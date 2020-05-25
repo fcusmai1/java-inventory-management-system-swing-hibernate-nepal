@@ -14,15 +14,14 @@ import java.util.List;
  * Copyright : <a
  * href="http://ganeshtiwaridotcomdotnp.blogspot.com">Ganesh Tiwari </a>
  */
-public class DataComboBox extends JComboBox {
+public class DataComboBox extends JComboBox<DataComboBox.Item> {
 
     private static final long serialVersionUID = -615634209230481880L;
-    private List<Item> itemList;
+    private transient List<Item> itemList;
 
     public DataComboBox() {
         super();
         setBorder(BorderFactory.createEmptyBorder());
-//		setModel(new SortedComboBoxModel());
         AutoCompleteDecorator.decorate(this);
     }
 
@@ -48,21 +47,21 @@ public class DataComboBox extends JComboBox {
      * @param values first index must contain ID field
      */
 
-    public final void addRow(Object[] values) {
+    public final void addRow(final Object[] values) {
         if (itemList == null) {
             itemList = new ArrayList<>();
-            Item blank = new Item(0, "");
+            final Item blank = new Item(0, "");
             itemList.add(blank);
             this.addItem(blank);
         }
-        Item item = new Item((Integer) values[0], getStringRepresentation(values));
+        final Item item = new Item((Integer) values[0], getStringRepresentation(values));
         itemList.add(item);
         this.addItem(item);
 
     }
 
-    protected static final String getStringRepresentation(Object[] values) {
-        StringBuilder sb = new StringBuilder();
+    protected static final String getStringRepresentation(final Object[] values) {
+        final StringBuilder sb = new StringBuilder();
         for (int i = 1; i < values.length; i++) {
             sb.append(values[i]);
             if (i != values.length - 1) sb.append("  -  ");
@@ -71,47 +70,22 @@ public class DataComboBox extends JComboBox {
     }
 
     public final int getSelectedId() {
-        int index = this.getSelectedIndex();
-        if (index > 0 && itemList != null && itemList.size() > 0) {
-            Item item = itemList.get(index);
+        final int index = this.getSelectedIndex();
+        if (index > 0 && itemList != null && itemList.isEmpty()) {
+            final Item item = itemList.get(index);
             return item.getId();
         }
         return -1;
     }
 
-    public final void selectItem(int id) {
-        for (Item item : itemList) {
+    public final void selectItem(final int id) {
+        for (final Item item : itemList) {
             if (item.getId() == id) {
                 this.setSelectedItem(item);
             }
         }
     }
 
-    private int getMaxIdIndex() {
-        int index = 0;
-        int max = 0;
-        for (int i = 0; i < itemList.size(); i++) {
-
-            if (itemList.get(i).id >= max) {
-                max = itemList.get(i).id;
-                index = i;
-            }
-        }
-        System.out.println("Max IDDDDDDd index >> " + index + " id " + max);
-        return index;
-    }
-
-    /**
-     * select max ID value
-     */
-//	public void selectLastInsertedItem() {
-//		if (itemList != null) {
-//
-//			this.setSelectedIndex(getMaxIdIndex());
-//		}
-//		else
-//			setSelectedIndex(getItemCount() - 1);
-//	}
     public final void selectLastItem() {
         if (itemList != null) this.setSelectedItem(itemList.size());
         else
@@ -119,15 +93,18 @@ public class DataComboBox extends JComboBox {
     }
 
     public final void selectDefaultItem() {
-        if (itemList != null && itemList.size() > 0) this.setSelectedItem(itemList.get(0));
+        if (itemList != null && itemList.isEmpty()) 
+        {
+            this.setSelectedItem(itemList.get(0));
+        }
     }
 
     public final boolean contains(String s) {
         if (s == null || s.trim().isEmpty()) return true;
         if (itemList == null) return false;
         s = s.toLowerCase();
-        for (Item i : itemList) {
-            if (i.toString().toLowerCase().equals(s)) {
+        for (final Item i : itemList) {
+            if (i.toString().equalsIgnoreCase(s)) {
                 return true;
             }
         }
@@ -138,7 +115,7 @@ public class DataComboBox extends JComboBox {
     public final boolean matches(String s) {
         if (s == null || s.trim().isEmpty()) return true;
         s = s.toLowerCase();
-        for (Item i : itemList) {
+        for (final Item i : itemList) {
             if (i.toString().toLowerCase().contains(s)) {
                 return true;
             }
@@ -151,7 +128,7 @@ public class DataComboBox extends JComboBox {
         int id;
         String text;
 
-        public Item(int id, String text) {
+        public Item(final int id, final String text) {
             super();
             this.id = id;
             this.text = text;
@@ -161,7 +138,7 @@ public class DataComboBox extends JComboBox {
             return id;
         }
 
-        public final void setId(int id) {
+        public final void setId(final int id) {
             this.id = id;
         }
 
@@ -169,27 +146,19 @@ public class DataComboBox extends JComboBox {
             return text;
         }
 
-        public final void setText(String text) {
+        public final void setText(final String text) {
             this.text = text;
         }
 
         @Override
         public final String toString() {
-            // return String.format("%s : %s", id, text);
             return String.format("%s", text);
         }
 
-        public final int compareTo(Item o) {
-            Item it2 = o;
+        @Override
+        public final int compareTo(final Item o) {
+            final Item it2 = o;
             return this.text.compareToIgnoreCase(it2.text);
-
         }
-
-        // @Override
-        // public boolean equals(Object obj) {
-        // // TODO Auto-generated method stub
-        // Item it2 = (Item) obj;
-        // return it2.text.compareToIgnoreCase(this.text) > 0 ? true : false;
-        // }
     }
 }

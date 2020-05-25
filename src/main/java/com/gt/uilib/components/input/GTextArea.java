@@ -11,6 +11,10 @@ import javax.swing.text.PlainDocument;
  * @author GT
  */
 public class GTextArea extends JScrollPane {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private JTextArea addressFLD;
 
     public GTextArea(int rows, int cols) {
@@ -54,7 +58,12 @@ public class GTextArea extends JScrollPane {
 }
 
 class JTextFieldLimit extends PlainDocument {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
     private int limit;
+    private boolean upper;
 
     JTextFieldLimit(int limit) {
         super();
@@ -63,14 +72,20 @@ class JTextFieldLimit extends PlainDocument {
 
     JTextFieldLimit(int limit, boolean upper) {
         super();
+        this.upper = upper;
         this.limit = limit;
     }
 
+    @Override
     public final void insertString(int offset, String str, AttributeSet attr) throws BadLocationException {
         if (str == null) return;
 
         if ((getLength() + str.length()) <= limit) {
             super.insertString(offset, str, attr);
+        }
+        if(this.upper)
+        {
+            this.upper = false;
         }
     }
 }

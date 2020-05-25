@@ -51,6 +51,7 @@ public class NumberFormatDocument extends PlainDocument {
         this.decimalPlacesSize = decimalPlacesSize;
     }
 
+    @Override
     public final void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
         Matcher matcher = null;
         if (target.isRestrictPositiveNumber()) matcher = pattern.matcher(str);
@@ -122,6 +123,7 @@ public class NumberFormatDocument extends PlainDocument {
         }
     }
 
+    @Override
     public final void remove(int offs, int len) throws BadLocationException {
         int dot = target.getCaret().getDot();
         int comma1 = calcComma(getText(0, dot));
@@ -129,9 +131,18 @@ public class NumberFormatDocument extends PlainDocument {
         if (offs == dot) isDelete = true;
         if (len == 1 && offs > 0) {
             String c = getText(offs, len);
-            if (c.equals(",")) if (dot > offs) offs--;
+            if (c.equals(","))
+            {
+                if (dot > offs)
+                {
+                    offs--;
+                }
+            }
             else
+            {
                 offs++;
+            }
+      
         }
         super.remove(offs, len);
         String value = getText(0, getLength());

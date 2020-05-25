@@ -37,10 +37,8 @@ public class ExitButton extends ActionButton {
         }
 
         if (res == JOptionPane.YES_OPTION) {
-            // setVisible(false);
             logger.info("Shutting Down");
             AppFrame.getInstance().dispose();
-            // TODO: DB connection close
             System.exit(0);
         }
     }

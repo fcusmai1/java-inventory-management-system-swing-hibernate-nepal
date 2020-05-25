@@ -10,6 +10,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class LogOutButton extends ActionButton {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     public LogOutButton(String Text, ImageIcon on, ImageIcon off, String panelQualifiedClassName) {
         super(Text, on, off, panelQualifiedClassName);
     }
@@ -33,21 +38,21 @@ public class LogOutButton extends ActionButton {
 
     protected final MouseListener getLogOutMouseListener() {
         MouseListener ml = new MouseAdapter() {
-
+            @Override
             public void mouseReleased(MouseEvent e) {
                 handleLogout();
             }
-
+            @Override
             public void mouseEntered(MouseEvent e) {
                 setBorder(new EtchedBorder(EtchedBorder.LOWERED));
                 highlight();
             }
-
+            @Override
             public void mouseExited(MouseEvent e) {
                 setBorder(null);
                 unhighlight();
             }
-
+            @Override
             public void mouseClicked(MouseEvent e) {
                 setBorder(null);
                 unhighlight();
