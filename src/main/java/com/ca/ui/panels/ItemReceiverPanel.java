@@ -9,9 +9,7 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
@@ -52,6 +50,7 @@ public class ItemReceiverPanel extends JPanel {
         add(dataCombo, "1, 4, 5, 1, fill, default");
 
     }
+
 
     public static void main(String[] args) {
         try {
