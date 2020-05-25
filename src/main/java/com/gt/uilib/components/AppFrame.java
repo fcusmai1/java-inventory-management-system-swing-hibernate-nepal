@@ -26,8 +26,8 @@ import java.util.List;
 public class AppFrame extends JFrame {
 
     static Logger logger = Logger.getLogger(AppFrame.class);
-    public static final String loginPanel = "com.ca.ui.panels.LoginPanel";
-
+    private static String loginPanel = "com.ca.ui.panels.LoginPanel";
+    private static String homeScreenPanel = "com.ca.ui.panels.HomeScreenPanel";
     public static AbstractFunctionPanel currentWindow;
     public static boolean isLoggedIn = false;
     public static boolean debug = true;
@@ -37,14 +37,14 @@ public class AppFrame extends JFrame {
     private static JPanel toolBarPanel;
     WindowListener exitListener = new WindowAdapter() {
         @Override
-        public void windowClosing(WindowEvent e) {
+        public void windowClosing(final WindowEvent e) {
         }
     };
     private JLabel statusLbl;
 
     private AppFrame() {
         setTitle(StrConstants.APP_TITLE);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setBounds(100, 100, 850, 500);
 
         this.setIconImage(ResourceManager.getImage("logo2.png"));
@@ -60,7 +60,7 @@ public class AppFrame extends JFrame {
         currentWindow = getFunctionPanelInstance(loginPanel);
         setWindow(currentWindow);
 
-        GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        final GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
 
         setMaximizedBounds(e.getMaximumWindowBounds());
         setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
@@ -76,7 +76,7 @@ public class AppFrame extends JFrame {
 
     public static void loginSuccess() {
         isLoggedIn = true;
-        getInstance().setWindow("com.ca.ui.panels.HomeScreenPanel");
+        getInstance().setWindow(homeScreenPanel);
         logger.info("logged in");
     }
 
@@ -86,23 +86,23 @@ public class AppFrame extends JFrame {
             /**
              * First menu -
              */
-            JMenu startMnu = new JMenu("Application");
-            JMenuItem logOutMnuItem = new JMenuItem("Log Out");
+            final JMenu startMnu = new JMenu("Application");
+            final JMenuItem logOutMnuItem = new JMenuItem("Log Out");
             logOutMnuItem.addActionListener(e -> LogOutButton.handleLogout());
             startMnu.add(logOutMnuItem);
-            JMenuItem exitMnuItem = new JMenuItem("Close");
+            final JMenuItem exitMnuItem = new JMenuItem("Close");
             exitMnuItem.addActionListener(e -> ExitButton.handleExit());
             startMnu.add(exitMnuItem);
             menuBar.add(startMnu);
             /**
              * Entry Menu
              */
-            JMenu entryMenu = new JMenu("Entry");
+            final JMenu entryMenu = new JMenu("Entry");
             entryMenu.add(ActionMenuItem.create("New Item Entry", "sitementry", "com.ca.ui.panels.ItemEntryPanel"));
             entryMenu.add(ActionMenuItem.create("Item Nikasha", "sitemnikasha", "com.ca.ui.panels.ItemTransferPanel"));
             entryMenu.add(ActionMenuItem.create("Item Return", "sitemnikasha", "com.ca.ui.panels.ItemReturnPanel"));
             entryMenu.add(new JSeparator());
-            JMenu initRecordMenuSub = new JMenu("Initial Records");
+            final JMenu initRecordMenuSub = new JMenu("Initial Records");
 
             initRecordMenuSub.add(ActionMenuItem.create("Add Category", "a", "com.ca.ui.panels.CategoryPanel"));
             initRecordMenuSub.add(ActionMenuItem.create("Add Vendor", "vendor", "com.ca.ui.panels.VendorPanel"));
@@ -115,7 +115,7 @@ public class AppFrame extends JFrame {
             /**
              * Search
              */
-            JMenu searchMnu = new JMenu("Search");
+            final JMenu searchMnu = new JMenu("Search");
             searchMnu.add(ActionMenuItem.create("Stock Search", "sfind", "com.ca.ui.panels.StockQueryPanel"));
             searchMnu.add(ActionMenuItem.create("Transfer Search", "sfind", "com.ca.ui.panels.TransferQueryPanel"));
             searchMnu.add(ActionMenuItem.create("Item Return Search", "sfind", "com.ca.ui.panels.ReturnQueryPanel"));
@@ -124,27 +124,26 @@ public class AppFrame extends JFrame {
             /**
              * View All Reports
              */
-            JMenu reportsMenu = new JMenu("Reports");
+            final JMenu reportsMenu = new JMenu("Reports");
             reportsMenu.add(ActionMenuItem.create("Ledger ", "sfind", "com.ca.ui.report.LedgerReportPanel"));
             menuBar.add(reportsMenu);
             /**
              * Tools Menu This ActionMenuItem should be displayed on JDialog
              */
-            JMenu toolsMenu = new JMenu("Tools");
+            final JMenu toolsMenu = new JMenu("Tools");
             toolsMenu.add(ActionMenuItem.create("Account Transfer/Close", "backup", "com.ca.ui.panels.AccountCloseItemEntryPanel"));
             toolsMenu.add(new JSeparator());
-            JMenuItem jmChang = new JMenuItem("Change UserName/Password");
+            final JMenuItem jmChang = new JMenuItem("Change UserName/Password");
             jmChang.addActionListener(e -> {
                 if (isLoggedIn) {
-                    GDialog cd = new GDialog(AppFrame.this, "Change Username/Password", true);
-                    ChangePasswordPanel vp = new ChangePasswordPanel();
+                    final GDialog cd = new GDialog(AppFrame.this, "Change Username/Password", true);
+                    final ChangePasswordPanel vp = new ChangePasswordPanel();
                     cd.setAbstractFunctionPanel(vp, new Dimension(480, 340));
                     cd.setResizable(false);
                     cd.setVisible(true);
                     cd.addWindowListener(new WindowAdapter() {
                         @Override
-                        public void windowClosing(WindowEvent e) {
-                            // setWindow("com.ca.ui.panels.HomeScreenPanel");
+                        public void windowClosing(final WindowEvent e) {
                             handleLogOut();
                         }
                     });
@@ -157,26 +156,26 @@ public class AppFrame extends JFrame {
             /**
              * Last Menu
              */
-            JMenu helpMenu = new JMenu("Help");
-            JMenuItem readmanualItem = new JMenuItem("Read Manual");
+            final JMenu helpMenu = new JMenu("Help");
+            final JMenuItem readmanualItem = new JMenuItem("Read Manual");
             helpMenu.add(readmanualItem);
             helpMenu.add(new JSeparator());
-            JMenuItem supportMnu = new JMenuItem("Support");
+            final JMenuItem supportMnu = new JMenuItem("Support");
             helpMenu.add(supportMnu);
 
             readmanualItem.addActionListener(e -> {
                 try {
-                    String cmd = "cmd.exe /c start ";
-                    String file = "help.pdf";
+                    final String cmd = "cmd.exe /c start ";
+                    final String file = "help.pdf";
                     Runtime.getRuntime().exec(cmd + file);
-                } catch (Exception e2) {
+                } catch (final Exception e2) {
                     JOptionPane.showMessageDialog(AppFrame.this, "Could not open help file " + e2.getMessage(), "Error opening file",
                             JOptionPane.ERROR_MESSAGE);
                 }
             });
             supportMnu.addActionListener(e -> {
-                GDialog cd = new GDialog(AppFrame.this, "About/Support", true);
-                AboutPanel vp = new AboutPanel();
+                final GDialog cd = new GDialog(AppFrame.this, "About/Support", true);
+                final AboutPanel vp = new AboutPanel();
                 cd.setAbstractFunctionPanel(vp, new Dimension(400, 190));
                 cd.setVisible(true);
 
@@ -188,7 +187,7 @@ public class AppFrame extends JFrame {
     }
 
     private JPanel getStatusPanel() {
-        JPanel statusPanel = new JPanel();
+        final JPanel statusPanel = new JPanel();
         statusPanel.add(getStatusLbl());
         return statusPanel;
     }
@@ -209,8 +208,8 @@ public class AppFrame extends JFrame {
         return bodyPanel;
     }
 
-    public final void setWindow(String curQfn) {
-        AbstractFunctionPanel cur = getFunctionPanelInstance(curQfn);
+    public final void setWindow(final String curQfn) {
+        final AbstractFunctionPanel cur = getFunctionPanelInstance(curQfn);
         if (cur != null && isLoggedIn) {
             if (!currentWindow.getFunctionName().equals(cur.getFunctionName())) {
                 setWindow(cur);
@@ -222,7 +221,7 @@ public class AppFrame extends JFrame {
         }
     }
 
-    protected static final AbstractFunctionPanel getFunctionPanelInstance(String className) {
+    protected static final AbstractFunctionPanel getFunctionPanelInstance(final String className) {
         AbstractFunctionPanel object = null;
         try {
             object = (AbstractFunctionPanel) Class.forName(className).newInstance();
@@ -250,7 +249,7 @@ public class AppFrame extends JFrame {
             toolBarPanel = new JPanel();
             toolBarPanel.setLayout(new BorderLayout(20, 10));
 
-            List<JLabel> buttons = new ArrayList<>();
+            final List<JLabel> buttons = new ArrayList<>();
             buttons.add(ActionButton.create("HOME", "home", "com.ca.ui.panels.HomeScreenPanel"));
             buttons.add(ActionButton.create("Stock Query", "find", "com.ca.ui.panels.StockQueryPanel"));
             buttons.add(ActionButton.create("Item Entry", "itementry", "com.ca.ui.panels.ItemEntryPanel"));
@@ -265,12 +264,12 @@ public class AppFrame extends JFrame {
             toolBarPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
             toolBarPanel.setPreferredSize(new Dimension(getWidth(), 80));
             toolBarPanel.setLayout(new GridBagLayout());
-            GridBagConstraints c = new GridBagConstraints();
+            final GridBagConstraints c = new GridBagConstraints();
 
             c.gridx = 0;
             c.gridy = 0;
             c.weightx = 0.5;
-            for (JLabel button : buttons) {
+            for (final JLabel button : buttons) {
                 toolBarPanel.add(button, c);
                 c.gridx++;
             }
@@ -278,7 +277,7 @@ public class AppFrame extends JFrame {
         return toolBarPanel;
     }
 
-    public static final void showDBConnectionErrorMessage(Exception e) {
+    public static final void showDBConnectionErrorMessage(final Exception e) {
         JOptionPane.showMessageDialog(null, "Could not start DB Connection " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         logger.error("DB connection failed", e);
     }

@@ -50,21 +50,23 @@ public class ExitButton extends ActionButton {
 
     protected final MouseListener getExitMouseListener() {
         MouseListener ml = new MouseAdapter() {
-
+            @Override
             public void mouseReleased(MouseEvent e) {
                 handleExit();
             }
-
+            @Override
             public void mouseEntered(MouseEvent e) {
                 setBorder(new EtchedBorder(EtchedBorder.LOWERED));
                 highlight();
             }
-
+            @Override
             public void mouseExited(MouseEvent e) {
                 setBorder(null);
+                highlight();
                 unhighlight();
-            }
 
+            }
+            @Override
             public void mouseClicked(MouseEvent e) {
                 setBorder(null);
                 unhighlight();

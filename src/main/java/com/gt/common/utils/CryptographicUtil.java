@@ -35,8 +35,8 @@ public class CryptographicUtil {
      */
     public CryptographicUtil(SecretKey key) {
         try {
-            ecipher = Cipher.getInstance("DES");
-            dcipher = Cipher.getInstance("DES");
+            ecipher = Cipher.getInstance("AES/GCM/NoPadding");
+            dcipher = Cipher.getInstance("AES/GCM/NoPadding");
             ecipher.init(Cipher.ENCRYPT_MODE, key);
             dcipher.init(Cipher.DECRYPT_MODE, key);
         } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException e) {
