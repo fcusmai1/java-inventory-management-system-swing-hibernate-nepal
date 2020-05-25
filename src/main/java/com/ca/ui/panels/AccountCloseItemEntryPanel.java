@@ -278,9 +278,10 @@ public class AccountCloseItemEntryPanel extends AbstractFunctionPanel {
 
         if (v != null) {
             v.resetErrors();
+            v.addTask(txtPananumber, "Req", null, true);
         }
 
-        v.addTask(txtPananumber, "Req", null, true);
+
 
 
     }

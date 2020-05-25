@@ -6,7 +6,6 @@ import com.ca.db.service.DBUtils;
 import com.ca.db.service.TransferServiceImpl;
 import com.gt.uilib.components.AbstractFunctionPanel;
 import com.gt.uilib.components.input.NumberTextField;
-import com.gt.uilib.inputverifier.Validator;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -21,9 +20,8 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
     private JLabel txtItemnmaa;
     private JLabel txtCategoryr;
     private JLabel txtKhatapananumbbber;
-    Validator v;
     private final String[] damageStatusStr = new String[]{"", "Good", "Unrepairable", "Needs Repair", "Exemption"};
-    private JComboBox cmbReturnStatus;
+    private JComboBox<?> cmbReturnStatus;
     private JLabel txtTransferPnaNum1;
     private JLabel lblItemrequestnumber;
     private JLabel lblTransferquanityt;
@@ -33,6 +31,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
     private NumberTextField txtReturnQuanitty;
     private JDateChooser returnDateChooser;
     private JTextField txtReturnnumber;
+    static transient System.Logger logger;
 
     public CorrectionItemReturnPanel(int id) {
 
@@ -48,7 +47,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e);
         }
         EventQueue.invokeLater(() -> {
             try {
@@ -59,7 +58,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
                 jf.setVisible(true);
                 jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(System.Logger.Level.ERROR, e);
             }
         });
     }
@@ -92,8 +91,8 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
             txtTransferDate.setEnabled(false);
             returnDateChooser.getDateEditor().setEnabled(false);
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
+
         }
 
     }
@@ -192,7 +191,6 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
         add(lblDate, "4, 16");
 
         txtTransferDate = new JDateChooser();
-        // txtDate.setText("Date");
         add(txtTransferDate, "10, 16, fill, default");
 
         JSeparator separator = new JSeparator();
@@ -219,7 +217,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
         add(txtReturnQuanitty, "10, 24, fill, default");
         txtReturnQuanitty.setColumns(10);
 
-        cmbReturnStatus = new JComboBox(damageStatusStr);
+        cmbReturnStatus = new JComboBox<>(damageStatusStr);
         add(cmbReturnStatus, "10, 26, fill, default");
 
         JPanel panel = new JPanel();
@@ -251,13 +249,11 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
             return;
         }
         try {
-            TransferServiceImpl ns = new TransferServiceImpl();
             TransferServiceImpl.deleteTransfer(currentReturnId);
 
             handleDeleteSuccess();
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
     }
 
@@ -286,10 +282,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
         }
 
 
-        if (damageStatus > 0 && qty > 0 && returnDateChooser.getDate() != null) {
-            return true;
-        }
-        return false;
+        return damageStatus > 0 && qty > 0 && returnDateChooser.getDate() != null;
 
     }
 
@@ -311,11 +304,9 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
             return;
         }
         try {
-            int damageStatus = getDamageStatusIndex(cmbReturnStatus.getSelectedItem().toString());
             handleSuccess();
         } catch (Exception e) {
-            e.printStackTrace();
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
     }
 
@@ -333,7 +324,7 @@ public class CorrectionItemReturnPanel extends AbstractFunctionPanel {
 
     @Override
     public void enableDisableComponents() {
-
+        throw new UnsupportedOperationException();
     }
 
 }

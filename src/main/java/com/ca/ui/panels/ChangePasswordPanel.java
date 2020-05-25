@@ -16,17 +16,13 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ChangePasswordPanel extends AbstractFunctionPanel {
-    private JPanel fullPanel;
     private JPanel innerPanel;
     private JTextField userName;
     private JPasswordField passWord;
-    private JLabel lblDept;
-    private JLabel lblInventoryManagementSystem;
-    private JLabel lblTitile;
-    private JLabel lblImg;
     private JTextField txtNewUsrName;
     private JPasswordField txtNewPass1;
     private JPasswordField txtNewpass;
+    static transient System.Logger logger;
 
     public ChangePasswordPanel() {
         add(getLoginPanel());
@@ -37,7 +33,7 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e);
         }
         EventQueue.invokeLater(() -> {
             try {
@@ -48,13 +44,14 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
                 jf.setVisible(true);
                 jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(System.Logger.Level.ERROR, e);
             }
         });
     }
 
     private JPanel getLoginPanel() {
-        fullPanel = new JPanel();
+        final String TAHOMA = "Tahoma";
+        JPanel fullPanel = new JPanel();
         fullPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         innerPanel = new JPanel();
         innerPanel.setBounds(41, 96, 336, 144);
@@ -72,20 +69,20 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
                 FormFactory.RELATED_GAP_ROWSPEC, RowSpec.decode("max(18dlu;default)"), FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
                 FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,}));
 
-        lblImg = new JLabel("img");
+        JLabel lblImg = new JLabel("img");
         lblImg.setIcon(ResourceManager.getImageIcon("logo2.png"));
         innerPanel.add(lblImg, "2, 6, 3, 5");
 
-        lblTitile = new JLabel(ResourceManager.getString(StrConstants.COMPANY_NAME));
-        lblTitile.setFont(new Font("Tahoma", Font.BOLD, 16));
+        JLabel lblTitile = new JLabel(ResourceManager.getString(StrConstants.COMPANY_NAME));
+        lblTitile.setFont(new Font(TAHOMA, Font.BOLD, 16));
         innerPanel.add(lblTitile, "6, 6, 7, 1, left, default");
 
-        lblDept = new JLabel(ResourceManager.getString(StrConstants.DEPARTMENT));
-        lblDept.setFont(new Font("Tahoma", Font.BOLD, 13));
+        JLabel lblDept = new JLabel(ResourceManager.getString(StrConstants.DEPARTMENT));
+        lblDept.setFont(new Font(TAHOMA, Font.BOLD, 13));
         innerPanel.add(lblDept, "6, 8, 7, 1, left, default");
 
-        lblInventoryManagementSystem = new JLabel(ResourceManager.getString(StrConstants.APP_TITLE));
-        lblInventoryManagementSystem.setFont(new Font("Tahoma", Font.BOLD, 13));
+        JLabel lblInventoryManagementSystem = new JLabel(ResourceManager.getString(StrConstants.APP_TITLE));
+        lblInventoryManagementSystem.setFont(new Font(TAHOMA, Font.BOLD, 13));
         innerPanel.add(lblInventoryManagementSystem, "6, 10, 7, 1, left, default");
 
         JLabel lblNewLabel = new JLabel("UserName :");
@@ -135,20 +132,18 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
 
     private void change() {
 
-        if (StringUtils.isEmpty(txtNewpass.getText()) || StringUtils.isEmpty(userName.getText()) || StringUtils.isEmpty(passWord.getText())
-                || StringUtils.isEmpty(txtNewPass1.getText())) {
+        if (StringUtils.isEmpty(txtNewpass.getName()) || StringUtils.isEmpty(userName.getName()) || StringUtils.isEmpty(passWord.getName())
+                || StringUtils.isEmpty(txtNewPass1.getName())) {
             JOptionPane.showMessageDialog(null, "Please enter new and old username/password properly");
             return;
         }
-        if (!txtNewpass.getText().trim().equals(txtNewPass1.getText().trim())) {
+        if (!txtNewpass.getName().trim().equals(txtNewPass1.getName().trim())) {
             JOptionPane.showMessageDialog(null, "New and old password doesnot match");
             return;
         }
 
-        LoginUserServiceImpl lus;
         try {
-            lus = new LoginUserServiceImpl();
-            LoginUser user = LoginUserServiceImpl.getLoginUser(userName.getText().trim(), passWord.getText().trim());
+            LoginUser user = LoginUserServiceImpl.getLoginUser(userName.getName().trim(), passWord.getName().trim());
             if (user == null) {
                 JOptionPane.showMessageDialog(null, "Original Username Password Error");
                 passWord.setText("");
@@ -156,14 +151,13 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
                 return;
             }
 
-            lus = new LoginUserServiceImpl();
             // finally change password/username
-            LoginUserServiceImpl.changeLogin(txtNewUsrName.getText().trim(), txtNewpass.getText().trim());
+            LoginUserServiceImpl.changeLogin(txtNewUsrName.getText().trim(), txtNewpass.getName().trim());
 
             JOptionPane.showMessageDialog(null, "Username/Password Changed Successfully\n New UserName is " + txtNewUsrName.getText().trim());
             clearAll();
         } catch (Exception e1) {
-            e1.printStackTrace();
+            logger.log(System.Logger.Level.ERROR, e1);
             JOptionPane.showMessageDialog(null, "DB Connection Error");
         }
 
@@ -176,7 +170,7 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
 
     @Override
     public void handleSaveAction() {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -188,8 +182,7 @@ public class ChangePasswordPanel extends AbstractFunctionPanel {
 
     @Override
     public void enableDisableComponents() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
 }

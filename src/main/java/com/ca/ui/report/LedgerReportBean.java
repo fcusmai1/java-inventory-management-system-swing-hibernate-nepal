@@ -1,5 +1,7 @@
 package com.ca.ui.report;
 
+import java.util.Objects;
+
 public class LedgerReportBean {
 
     private int itemId;
@@ -22,10 +24,6 @@ public class LedgerReportBean {
     private String notes;
     private String unitStock;
     private String unitTransfer;
-
-    private int getItemId() {
-        return itemId;
-    }
 
     public final void setItemId(int itemId) {
         this.itemId = itemId;
@@ -184,17 +182,40 @@ public class LedgerReportBean {
     }
 
     @Override
-    public final boolean equals(Object obj) {
-        LedgerReportBean rb = (LedgerReportBean) obj;
-        if (rb.getItemId() == this.getItemId()) {
-            return true;
-        }
-        return false;
+    public int hashCode() {
+        return Objects.hash(itemId, date, goodsName, entryFormId, khataPanaNumber, supplier, specification, inQty, inRate, inTotal, reqFormId, transferBranch, nikQty, nikRate, nikTotal, remQty, remTot, notes, unitStock, unitTransfer);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LedgerReportBean that = (LedgerReportBean) o;
+        return itemId == that.itemId &&
+                Objects.equals(date, that.date) &&
+                Objects.equals(goodsName, that.goodsName) &&
+                Objects.equals(entryFormId, that.entryFormId) &&
+                Objects.equals(khataPanaNumber, that.khataPanaNumber) &&
+                Objects.equals(supplier, that.supplier) &&
+                Objects.equals(specification, that.specification) &&
+                Objects.equals(inQty, that.inQty) &&
+                Objects.equals(inRate, that.inRate) &&
+                Objects.equals(inTotal, that.inTotal) &&
+                Objects.equals(reqFormId, that.reqFormId) &&
+                Objects.equals(transferBranch, that.transferBranch) &&
+                Objects.equals(nikQty, that.nikQty) &&
+                Objects.equals(nikRate, that.nikRate) &&
+                Objects.equals(nikTotal, that.nikTotal) &&
+                Objects.equals(remQty, that.remQty) &&
+                Objects.equals(remTot, that.remTot) &&
+                Objects.equals(notes, that.notes) &&
+                Objects.equals(unitStock, that.unitStock) &&
+                Objects.equals(unitTransfer, that.unitTransfer);
     }
 
     @Override
     public final String toString() {
-        String builder = "ReportBean [itemId=" +
+        return "ReportBean [itemId=" +
                 itemId +
                 ", date=" +
                 date +
@@ -235,7 +256,6 @@ public class LedgerReportBean {
                 ", unitTransfer=" +
                 unitTransfer +
                 "]";
-        return builder;
     }
 
 }

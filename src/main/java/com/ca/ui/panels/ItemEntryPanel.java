@@ -5,11 +5,8 @@ import com.ca.db.model.Item;
 import com.ca.db.model.UnitsString;
 import com.ca.db.model.Vendor;
 import com.ca.db.service.DBUtils;
-import com.ca.db.service.ItemServiceImpl;
-import com.gt.common.constants.Status;
-import com.gt.common.utils.DateTimeUtils;
 import com.gt.common.utils.UIUtils;
-import com.gt.uilib.components.AbstractFunctionPanel;
+import com.gt.uilib.components.AppFrame;
 import com.gt.uilib.components.GDialog;
 import com.gt.uilib.components.input.DataComboBox;
 import com.gt.uilib.components.table.BetterJTable;
@@ -29,10 +26,9 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
-public class ItemEntryPanel extends AbstractFunctionPanel {
+public class ItemEntryPanel extends JPanel {
     private final String[] header = new String[]{"S.N.", "ID", "Purchase Order No.", "Khata No.", "Dakhila No.", "Name", "Pana No.", "Category", "Specification",
             "Parts No.", "Serial No.", "Rack Number", "Purchase date", "Added date", "Vendor", "Original Quantity", "Qty in Stock", "Rate", "Unit",
             "Total"};
@@ -42,15 +38,11 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
     private JDateChooser txtPurDate;
     private SpecificationPanel currentSpecificationPanel;
     private JTextField txtName;
-    private JButton btnReadAll;
-    private JButton btnNew;
     private JButton btnSave;
     private JPanel upperPane;
     private JPanel lowerPane;
     private BetterJTable table;
     private EasyTableModel dataModel;
-    private int editingPrimaryId = 0;
-    private JButton btnCancel;
     private DataComboBox cmbCategory;
     private JPanel specPanelHolder;
     private JTextField txtPartsnumber;
@@ -59,6 +51,7 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
     private JTextField txtTotal;
     private JTextField txtSerialnumber;
     static transient System.Logger logger;
+    protected AppFrame mainApp;
 
     transient KeyListener priceCalcListener = new KeyListener() {
         private String getPrice() {
@@ -99,7 +92,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
         add(splitPane, BorderLayout.CENTER);
         splitPane.setLeftComponent(getUpperSplitPane());
         splitPane.setRightComponent(getLowerSplitPane());
-        v = new Validator(mainApp, true);
         init();
     }
 
@@ -123,11 +115,9 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
         });
     }
 
-    @Override
     public final void init() {
-        super.init();
+        UIUtils.decorateBorders(this);
         UIUtils.clearAllFields(upperPane);
-        changeStatus(Status.NONE);
         intCombo();
         txtTotal.setText("0");
     }
@@ -140,21 +130,12 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
 
             initCmbUnits();
         } catch (Exception e) {
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
         /* Item listener on cmbCategory - to change specification panel */
         cmbCategory.addItemListener(e -> {
-            int id = cmbCategory.getSelectedId();
             specPanelHolder.removeAll();
             currentSpecificationPanel = null;
-            if (id > 0) {
-                currentSpecificationPanel = new SpecificationPanel(id);
-                specPanelHolder.add(currentSpecificationPanel, FlowLayout.LEFT);
-                if (status == Status.CREATE || status == Status.MODIFY)
-                    currentSpecificationPanel.enableAll();
-                else
-                    currentSpecificationPanel.disableAll();
-            }
             specPanelHolder.repaint();
             specPanelHolder.revalidate();
 
@@ -192,169 +173,27 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
     private JPanel getButtonPanel() {
         if (buttonPanel == null) {
             buttonPanel = new JPanel();
-            btnReadAll = new JButton("Read All");
-            btnReadAll.addActionListener(e -> {
-                readAndShowAll(true);
-                changeStatus(Status.READ);
-            });
+            JButton btnReadAll = new JButton("Read All");
             buttonPanel.add(btnReadAll);
 
-            btnNew = new JButton("New");
-            btnNew.addActionListener(e -> changeStatus(Status.CREATE));
+            JButton btnNew = new JButton("New");
             buttonPanel.add(btnNew);
 
             JButton btnDeleteThis = new JButton("Delete This");
-            btnDeleteThis.addActionListener(e -> {
-                if (editingPrimaryId > 0) handleDeleteAction();
-            });
 
             JButton btnModify = new JButton("Modify");
-            btnModify.addActionListener(e -> {
-                if (editingPrimaryId > 0) changeStatus(Status.MODIFY);
-            });
             buttonPanel.add(btnModify);
             buttonPanel.add(btnDeleteThis);
 
-            btnCancel = new JButton("Cancel");
-            btnCancel.addActionListener(e -> changeStatus(Status.READ));
+            JButton btnCancel = new JButton("Cancel");
             buttonPanel.add(btnCancel);
         }
         return buttonPanel;
     }
 
-    private void handleDeleteAction() {
-        if (status == Status.READ && DataEntryUtils.confirmDBDelete()) deleteSelectedItem();
-    }
 
-    private void deleteSelectedItem() {
-        try {
-            DBUtils.deleteById(Item.class, editingPrimaryId);
-            changeStatus(Status.READ);
-            JOptionPane.showMessageDialog(null, "Deleted");
-            readAndShowAll(false);
-        } catch (Exception e) {
-            logger.log(System.Logger.Level.ERROR, e);
-            handleDBError(e);
-        }
-    }
-
-    @Override
     public final void enableDisableComponents() {
         v.resetErrors();
-        switch (status) {
-            case NONE:
-                UIUtils.toggleAllChildren(buttonPanel, false);
-                UIUtils.toggleAllChildren(formPanel, false);
-                UIUtils.toggleAllChildren(currentSpecificationPanel, false);
-                UIUtils.clearAllFields(formPanel);
-                UIUtils.clearAllFields(currentSpecificationPanel);
-                btnReadAll.setEnabled(true);
-                btnNew.setEnabled(true);
-                table.setEnabled(true);
-                txtPurDate.getDateEditor().setEnabled(false);
-                break;
-            case CREATE:
-                UIUtils.toggleAllChildren(buttonPanel, false);
-                UIUtils.toggleAllChildren(formPanel, true);
-                UIUtils.toggleAllChildren(currentSpecificationPanel, true);
-                txtPurDate.setDate(new Date());
-                table.setEnabled(false);
-                btnCancel.setEnabled(true);
-                btnSave.setEnabled(true);
-                txtPurDate.getDateEditor().setEnabled(false);
-                break;
-            case MODIFY:
-                UIUtils.toggleAllChildren(formPanel, true);
-                UIUtils.toggleAllChildren(buttonPanel, false);
-                UIUtils.toggleAllChildren(currentSpecificationPanel, true);
-                cmbCategory.setEnabled(false);
-                btnNewCategory.setEnabled(false);
-
-                btnCancel.setEnabled(true);
-                btnSave.setEnabled(true);
-                table.setEnabled(false);
-                txtPurDate.getDateEditor().setEnabled(false);
-                break;
-
-            case READ:
-                UIUtils.toggleAllChildren(formPanel, false);
-                UIUtils.toggleAllChildren(buttonPanel, true);
-                UIUtils.toggleAllChildren(currentSpecificationPanel, false);
-                UIUtils.clearAllFields(formPanel);
-                table.clearSelection();
-                table.setEnabled(true);
-                editingPrimaryId = -1;
-
-                intCombo();
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    @Override
-    public final void handleSaveAction() {
-        switch (status) {
-            case CREATE:
-                // create new
-
-                save(false);
-                break;
-            case MODIFY:
-                // modify
-                save(true);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    private void initValidator() {
-
-        if (v != null) {
-            v.resetErrors();
-        }
-        v = new Validator(mainApp, true);
-        v.addTask(txtName, "Req", null, true);
-        v.addTask(cmbCategory, "required", null, true);
-        v.addTask(cmbVendor, "required", null, true);
-        v.addTask(currentSpecificationPanel, "Spec req", null, true);
-        v.addTask(txtPurDate, "", null, true, true);
-        v.addTask(txtDakhilanumber, "Req", null, true);
-
-    }
-
-    /**
-     * current date not added to object ( for the case of modified data)
-     *
-     * @return
-     */
-    private Item getModelFromForm() {
-        Item bo = new Item();
-        bo.setPurchaseOrderNo(txtPurchaseordernumber.getText().trim());
-        bo.setName(txtName.getText().trim());
-        bo.setKhataNumber(txtKhatanumber.getText().trim().toUpperCase());
-        bo.setDakhilaNumber(txtDakhilanumber.getText().trim().toUpperCase());
-        bo.setPanaNumber(txtPananumber.getText().trim().toUpperCase());
-        bo.setRackNo(txtRacknumber.getText().trim().toUpperCase());
-        bo.setPartsNumber(txtPartsnumber.getText().trim());
-        bo.setSerialNumber(txtSerialnumber.getText().trim());
-        bo.setPurchaseDate(txtPurDate.getDate());
-        bo.setAddedType(Item.ADD_TYPE_NEW_ENTRY);
-        try {
-
-            bo.setCategory((Category) DBUtils.getById(Category.class, cmbCategory.getSelectedId()));
-            bo.setSpecification(currentSpecificationPanel.getSpecificationsObject());
-            bo.setVendor((Vendor) DBUtils.getById(Vendor.class, cmbVendor.getSelectedId()));
-            bo.setUnitsString((UnitsString) DBUtils.getById(UnitsString.class, cmbUnitcombo.getSelectedId()));
-
-        } catch (Exception e) {
-            logger.log(System.Logger.Level.ERROR, e);
-            handleDBError(e);
-        }
-        return bo;
     }
 
     private void setModelIntoForm(Item bro) {
@@ -374,58 +213,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
         txtDakhilanumber.setText(bro.getDakhilaNumber());
     }
 
-    private void save(boolean isModified) {
-        initValidator();
-        if (v.validate()) {
-
-            if (!isModified) {
-                if (!DataEntryUtils.confirmDBSave()) {
-                    return;
-                }
-            } else {
-                if (!DataEntryUtils.confirmDBUpdate()) {
-                    return;
-                }
-            }
-            try {
-
-                Item newBo = getModelFromForm();
-                if (isModified) {
-                    Item bo = (Item) DBUtils.getById(Item.class, editingPrimaryId);
-                    logger.log(System.Logger.Level.INFO, "is MODIFIED..........");
-                    bo.setName(newBo.getName());
-                    bo.setPurchaseOrderNo(newBo.getPurchaseOrderNo());
-                    bo.setPanaNumber(newBo.getPanaNumber());
-                    bo.setRackNo(newBo.getRackNo());
-                    bo.setRate(newBo.getRate());
-                    bo.setPartsNumber(newBo.getPartsNumber());
-                    bo.setOriginalQuantity(newBo.getOriginalQuantity());
-                    bo.setQuantity(newBo.getQuantity());
-                    bo.setSerialNumber(newBo.getSerialNumber());
-                    bo.setPurchaseDate(newBo.getPurchaseDate());
-                    bo.setCategory(newBo.getCategory());
-                    bo.setVendor(newBo.getVendor());
-                    bo.setAddedType(newBo.getAddedType());
-                    bo.setLastModifiedDate(new Date());
-                    bo.setCurrentFiscalYear(DateTimeUtils.getCurrentFiscalYear());
-                    DBUtils.saveOrUpdate(bo);
-                } else {
-                    // save new
-                    newBo.setdFlag(1);
-                    newBo.setAddedDate(new Date());
-                    newBo.setCurrentFiscalYear(DateTimeUtils.getCurrentFiscalYear());
-                    DBUtils.saveOrUpdate(newBo);
-                }
-                JOptionPane.showMessageDialog(null, "Saved Successfully");
-                changeStatus(Status.READ);
-                UIUtils.clearAllFields(upperPane);
-                readAndShowAll(false);
-            } catch (Exception e) {
-                logger.log(System.Logger.Level.ERROR, "save--" + e.getMessage());
-                handleDBError(e);
-            }
-        }
-    }
 
     private JPanel getUpperFormPanel() {
         if (formPanel == null) {
@@ -496,6 +283,7 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
             btnNewCategory.setEnabled(false);
             btnNewCategory.setVisible(false);
             btnNewCategory.addActionListener(e -> {
+
                 GDialog cd = new GDialog(mainApp, "New Category Entry", true);
                 CategoryPanel vp = new CategoryPanel();
                 vp.changeStatusToCreate();
@@ -607,7 +395,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
                 SwingWorker<Void, Void> worker = new SwingWorker<>() {
                     @Override
                     protected Void doInBackground() {
-                        handleSaveAction();
                         return null;
                     }
 
@@ -626,40 +413,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
         return formPanel;
     }
 
-    private void readAndShowAll(boolean showSize0Error) {
-        try {
-            List<Item> brsL = ItemServiceImpl.getAddedItems();
-            editingPrimaryId = -1;
-            if ((brsL == null || brsL.isEmpty()) && showSize0Error) {
-                JOptionPane.showMessageDialog(null, "No Records Found");
-            }
-            showListInGrid(brsL);
-        } catch (Exception ee) {
-            logger.log(System.Logger.Level.ERROR, ee);
-        }
-    }
-
-
-    private void showListInGrid(List<Item> brsL) {
-        dataModel.resetModel();
-        int sn = 0;
-        for (Item bo : brsL) {
-            BigDecimal total = bo.getRate().multiply(new BigDecimal(bo.getQuantity()));
-            dataModel.addRow(new Object[]{++sn, bo.getId(), bo.getPurchaseOrderNo(), bo.getKhataNumber(), bo.getDakhilaNumber(), bo.getName(),
-                    bo.getPanaNumber(), bo.getCategory().getCategoryName(), bo.getSpeciifcationString(), bo.getPartsNumber(), bo.getSerialNumber(),
-                    bo.getRackNo(), DateTimeUtils.getCvDateMMMddyyyy(bo.getPurchaseDate()), DateTimeUtils.getCvDateMMMddyyyy(bo.getAddedDate()),
-                    bo.getVendor().getName(), bo.getOriginalQuantity(), bo.getQuantity(), bo.getRate(), bo.getUnitsString().getValue(), total});
-        }
-        table.setModel(dataModel);
-        dataModel.fireTableDataChanged();
-        table.adjustColumns();
-        editingPrimaryId = -1;
-    }
-
-    @Override
-    public final String getFunctionName() {
-        return "New Item Entry";
-    }
 
     private JPanel getUpperSplitPane() {
         if (upperPane == null) {
@@ -702,7 +455,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
 
             if (bro != null) {
                 setModelIntoForm(bro);
-                editingPrimaryId = bro.getId();
                 cmbCategory.selectItem(bro.getCategory().getId());
                 cmbVendor.selectItem(bro.getVendor().getId());
                 txtPurDate.setDate(bro.getPurchaseDate());
@@ -710,7 +462,6 @@ public class ItemEntryPanel extends AbstractFunctionPanel {
             }
         } catch (Exception e) {
             logger.log(System.Logger.Level.INFO, "populateSelectedRowInForm");
-            handleDBError(e);
         }
     }
 

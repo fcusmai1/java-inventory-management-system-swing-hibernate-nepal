@@ -4,12 +4,9 @@ import com.ca.db.model.Category;
 import com.ca.db.model.Transfer;
 import com.ca.db.service.ItemReturnServiceImpl;
 import com.ca.db.service.TransferServiceImpl;
-import com.ca.db.service.dto.ReturnedItemDTO;
-import com.gt.common.constants.Status;
 import com.gt.common.utils.DateTimeUtils;
 import com.gt.common.utils.ExcelUtils;
 import com.gt.common.utils.UIUtils;
-import com.gt.uilib.components.AbstractFunctionPanel;
 import com.gt.uilib.components.input.DataComboBox;
 import com.gt.uilib.components.table.BetterJTable;
 import com.gt.uilib.components.table.EasyTableModel;
@@ -25,7 +22,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class ItemReturnPanel extends AbstractFunctionPanel {
+public class ItemReturnPanel extends JPanel {
     public static final String CATEGORY = "Category";
 
     private JPanel formPanel = null;
@@ -77,12 +74,10 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
     }
 
 
-    @Override
     public final void init() {
         /* never forget to call super.init() */
-        super.init();
+        UIUtils.decorateBorders(this);
         UIUtils.clearAllFields(upperPane);
-        changeStatus(Status.NONE);
         intCombo();
     }
 
@@ -95,7 +90,7 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
                 cmbCategory.addRow(new Object[]{c.getId(), c.getCategoryName()});
             }
         } catch (Exception e) {
-            handleDBError(e);
+            logger.log(System.Logger.Level.ERROR, e);
         }
     }
 
@@ -126,27 +121,7 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
         return buttonPanel;
     }
 
-    @Override
-    public final void enableDisableComponents() {
-        switch (status) {
-            case NONE:
-                UIUtils.clearAllFields(formPanel);
-                table.setEnabled(true);
-                btnSave.setEnabled(true);
-                break;
 
-            case READ:
-                UIUtils.clearAllFields(formPanel);
-                table.clearSelection();
-                table.setEnabled(true);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    @Override
     public void handleSaveAction() {
         throw new UnsupportedOperationException();
     }
@@ -283,10 +258,6 @@ public class ItemReturnPanel extends AbstractFunctionPanel {
         table.adjustColumns();
     }
 
-    @Override
-    public final String getFunctionName() {
-        return "Item Return Entry";
-    }
 
     private JPanel getUpperSplitPane() {
         if (upperPane == null) {

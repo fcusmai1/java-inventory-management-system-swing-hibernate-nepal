@@ -1,6 +1,7 @@
 package com.gt.common;
 
 import com.ca.ui.Main;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.net.ServerSocket;
@@ -34,14 +35,15 @@ public class AppStarter {
 
     private synchronized boolean notFindExisting() {
         // try to connect to server
-        Socket client;
         try {
-            client = new Socket(HOST, PORT);
+            Socket client = new Socket(HOST, PORT);
             logger.info("Connection accepted by already running app");
             notFindExisting = false;
         } catch (Exception e) {
             notFindExisting = true;
 
+        } finally {
+            logger.log(Level.INFO, "");
         }
         return notFindExisting;
     }
